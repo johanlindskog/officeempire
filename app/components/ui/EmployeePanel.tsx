@@ -26,7 +26,7 @@ export default function EmployeePanel({
   onFire,
 }: EmployeePanelProps) {
   const [position, setPosition] = useState({
-    x: typeof window !== "undefined" ? window.innerWidth / 2 - 300 : 100,
+    x: typeof window !== "undefined" ? window.innerWidth / 2 - 610 : 100,
     y: typeof window !== "undefined" ? window.innerHeight / 2 - 250 : 100,
   });
   const [isDragging, setIsDragging] = useState(false);

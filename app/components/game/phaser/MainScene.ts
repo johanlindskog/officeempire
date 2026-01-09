@@ -221,6 +221,8 @@ export class MainScene extends Phaser.Scene {
   }
 
   create(): void {
+    console.log("[MainScene] create() called, current grid has data:", this.grid && this.grid.length > 0);
+
     // Set up keyboard controls
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
@@ -258,11 +260,14 @@ export class MainScene extends Phaser.Scene {
       });
     }
 
-    // Initialize empty grid
-    this.initializeGrid();
+    // Only initialize empty grid if one wasn't already provided by React
+    if (!this.grid || this.grid.length === 0 || !this.grid[0]) {
+      this.initializeGrid();
+    }
 
     // Mark scene as ready
     this.isReady = true;
+    console.log("[MainScene] Scene is now ready, isReady =", this.isReady);
 
     // Enable input
     this.input.on("pointermove", this.handlePointerMove, this);
@@ -294,21 +299,14 @@ export class MainScene extends Phaser.Scene {
   }
 
   private initializeGrid(): void {
-    // 30% of 48x48 is ~691 cells. sqrt(691) is ~26.
-    const squareSize = 26;
-    const start = Math.floor((GRID_WIDTH - squareSize) / 2);
-    const end = start + squareSize;
-
+    // Initialize empty grid structure - React will provide the actual initial state with furniture
     this.grid = Array.from({ length: GRID_HEIGHT }, (_, y) =>
-      Array.from({ length: GRID_WIDTH }, (_, x) => {
-        const isCenterSquare = x >= start && x < end && y >= start && y < end;
-        return {
-          type: isCenterSquare ? TileType.Tile : TileType.Grass,
-          x,
-          y,
-          isOrigin: true,
-        };
-      })
+      Array.from({ length: GRID_WIDTH }, (_, x) => ({
+        type: TileType.Grass,
+        x,
+        y,
+        isOrigin: true,
+      }))
     );
   }
 
@@ -357,8 +355,10 @@ export class MainScene extends Phaser.Scene {
 
     // Handle dirty grid updates
     if (this.gridDirty) {
+      console.log("[MainScene] update() - gridDirty is true, calling applyGridUpdates");
       this.applyGridUpdates();
       this.gridDirty = false;
+      console.log("[MainScene] update() - applyGridUpdates completed");
     }
 
     // Update stats display
@@ -1335,16 +1335,28 @@ export class MainScene extends Phaser.Scene {
 
   // Receive grid updates from React (differential update)
   updateGrid(newGrid: GridCell[][]): void {
+    console.log("[MainScene] updateGrid called, isReady:", this.isReady);
+
+    // If scene isn't initialized yet, mark ALL cells as dirty
+    const forceFullUpdate = !this.grid || this.grid.length === 0 || !this.grid[0];
+
     // Find changed tiles and mark for update
+    let furnitureCount = 0;
     for (let y = 0; y < GRID_HEIGHT; y++) {
       for (let x = 0; x < GRID_WIDTH; x++) {
         const oldCell = this.grid[y]?.[x];
         const newCell = newGrid[y]?.[x];
 
-        if (!oldCell || !newCell) continue;
+        if (!newCell) continue;
 
-        // Check if tile changed
+        if (newCell.buildingId) {
+          furnitureCount++;
+        }
+
+        // Force update all tiles if grid wasn't initialized, or check if tile changed
         if (
+          forceFullUpdate ||
+          !oldCell ||
           oldCell.type !== newCell.type ||
           oldCell.buildingId !== newCell.buildingId ||
           oldCell.isOrigin !== newCell.isOrigin ||
@@ -1356,15 +1368,23 @@ export class MainScene extends Phaser.Scene {
       }
     }
 
+    console.log("[MainScene] Found", furnitureCount, "cells with furniture");
+    console.log("[MainScene] Dirty tiles count:", this.gridDirtyTiles.size);
+    console.log("[MainScene] Force full update:", forceFullUpdate);
+
     // Update grid reference
     this.grid = newGrid;
 
     if (this.gridDirtyTiles.size > 0) {
       this.gridDirty = true;
+      console.log("[MainScene] Set gridDirty = true");
     }
 
-    // Refresh preview
-    if (this.isReady) {
+    // If scene is ready and we have dirty tiles, trigger immediate update
+    if (this.isReady && this.gridDirty) {
+      console.log("[MainScene] Scene is ready and grid is dirty - applying updates immediately");
+      this.applyGridUpdates();
+      this.gridDirty = false;
       this.updatePreview();
       if (this.showPaths) {
         this.renderPathOverlay();
@@ -1373,6 +1393,8 @@ export class MainScene extends Phaser.Scene {
   }
 
   private applyGridUpdates(): void {
+    console.log("[MainScene] applyGridUpdates called, dirty tiles:", this.gridDirtyTiles.size);
+
     // Process dirty tiles
     const buildingsToRender = new Set<string>();
     const buildingsToRemove = new Set<string>();
@@ -1408,12 +1430,14 @@ export class MainScene extends Phaser.Scene {
     }
 
     // Render new/changed buildings
+    console.log("[MainScene] Buildings to render:", buildingsToRender.size);
     for (const key of buildingsToRender) {
       const [xStr, yStr] = key.split(",");
       const x = parseInt(xStr);
       const y = parseInt(yStr);
       const cell = this.grid[y]?.[x];
       if (cell?.buildingId) {
+        console.log("[MainScene] Rendering building:", cell.buildingId, "at", x, y);
         // Remove old sprite and glow if exists (including slices)
         const buildingKey = `building_${x},${y}`;
         this.removeBuildingSprites(buildingKey);

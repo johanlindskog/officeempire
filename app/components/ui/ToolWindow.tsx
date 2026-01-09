@@ -58,15 +58,20 @@ function getBuildingPreviewZoom(building: BuildingDefinition): number {
   return zoom;
 }
 
-// Calculate zoom level for furniture (same logic as buildings)
+// Calculate zoom level for furniture (adjusted for smaller sprite sizes)
+// Furniture sprites are much smaller (~40-100px) compared to buildings (~512px)
+// So we use smaller zoom values that work better with the preview containers
 function getFurniturePreviewZoom(furniture: FurnitureDefinition): number {
   const footprintSize = Math.max(
     furniture.footprint.width,
     furniture.footprint.height
   );
-  if (footprintSize === 1) return 950;
-  if (footprintSize === 2) return 500;
-  const zoom = Math.max(150, 450 - footprintSize * 40);
+  // Adjusted zoom levels for furniture sprites
+  // These values work better with small sprites in a 56x50px container
+  if (footprintSize === 1) return 200;
+  if (footprintSize === 2) return 180;
+  if (footprintSize === 3) return 150;
+  const zoom = Math.max(100, 200 - footprintSize * 20);
   return zoom;
 }
 
@@ -659,7 +664,9 @@ export default function ToolWindow({
           <span>
             {hoveredBuilding ||
               (selectedBuildingId && selectedTool === ToolType.Building
-                ? getBuilding(selectedBuildingId)?.name
+                ? (mode === "office"
+                    ? getFurniture(selectedBuildingId)?.name
+                    : getBuilding(selectedBuildingId)?.name)
                 : "") ||
               ""}
           </span>

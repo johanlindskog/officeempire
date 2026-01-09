@@ -88,14 +88,102 @@ const createEmptyGrid = (): GridCell[][] => {
   return Array.from({ length: GRID_HEIGHT }, (_, y) =>
     Array.from({ length: GRID_WIDTH }, (_, x) => {
       const isCenterSquare = x >= start && x < end && y >= start && y < end;
+      // Create a border of asphalt tiles around the office floor for a more defined look
+      const isInnerBorder =
+        isCenterSquare &&
+        (x === start || x === end - 1 || y === start || y === end - 1);
+
       return {
-        type: isCenterSquare ? TileType.Tile : TileType.Grass,
+        type: isInnerBorder ? TileType.Asphalt : (isCenterSquare ? TileType.Tile : TileType.Asphalt),
         x,
         y,
         isOrigin: true,
       };
     })
   );
+};
+
+// Create starter office layout for Level 1
+const createLevel1StarterOffice = (): GridCell[][] => {
+  const grid = createEmptyGrid();
+  const squareSize = 26;
+  const start = Math.floor((GRID_WIDTH - squareSize) / 2);
+
+  // Helper to place furniture on the grid
+  const placeFurniture = (
+    furnitureId: string,
+    gridX: number,
+    gridY: number,
+    width: number,
+    height: number,
+    orientation: Direction = Direction.Down
+  ) => {
+    // Look up furniture definition to get logical properties
+    const furniture = getFurniture(furnitureId);
+    const furnitureType = furniture?.furnitureType;
+    // Capacity only matters for desks currently, but good to have generic support
+    const capacity = furniture?.capacity;
+
+    // Place origin cell
+    grid[gridY][gridX] = {
+      ...grid[gridY][gridX],
+      type: TileType.Building,
+      buildingId: furnitureId,
+      buildingOrientation: orientation,
+      isOrigin: true,
+      furnitureType, // Add logical property
+      capacity,      // Add logical property
+    };
+
+    // Place non-origin cells
+    for (let dy = 0; dy < height; dy++) {
+      for (let dx = 0; dx < width; dx++) {
+        if (dx !== 0 || dy !== 0) {
+          grid[gridY + dy][gridX + dx] = {
+            ...grid[gridY + dy][gridX + dx],
+            type: TileType.Building,
+            buildingId: furnitureId,
+            buildingOrientation: orientation,
+            isOrigin: false,
+            originX: gridX,
+            originY: gridY,
+            furnitureType, // Add logical property
+            capacity,      // Add logical property
+          };
+        }
+      }
+    }
+  };
+
+  // Office layout - coordinates relative to the office tile area
+  const centerX = start + Math.floor(squareSize / 2);
+  const centerY = start + Math.floor(squareSize / 2);
+
+  // Starter desks area (left side) - 6 basic desks for initial employees
+  placeFurniture("basic-desk", centerX - 8, centerY - 8, 1, 1);
+  placeFurniture("basic-desk", centerX - 6, centerY - 8, 1, 1);
+  placeFurniture("basic-desk", centerX - 4, centerY - 8, 1, 1);
+  placeFurniture("basic-desk", centerX - 8, centerY - 6, 1, 1);
+  placeFurniture("basic-desk", centerX - 6, centerY - 6, 1, 1);
+  placeFurniture("basic-desk", centerX - 4, centerY - 6, 1, 1);
+
+  // Small meeting room (right side top)
+  placeFurniture("small-meeting", centerX + 5, centerY - 8, 2, 2);
+
+  // Break area (bottom left)
+  placeFurniture("coffee-station", centerX - 8, centerY + 2, 1, 1);
+  placeFurniture("water-cooler", centerX - 6, centerY + 2, 1, 1);
+  placeFurniture("break-table", centerX - 8, centerY + 4, 2, 2);
+
+  // Executive/Premium desks (right side) - for the CEO and managers
+  placeFurniture("executive-desk", centerX + 5, centerY + 2, 2, 1);
+  placeFurniture("premium-desk", centerX + 5, centerY + 4, 1, 1);
+  placeFurniture("premium-desk", centerX + 7, centerY + 4, 1, 1);
+
+  // Standing desk in middle area
+  placeFurniture("standing-desk", centerX - 1, centerY - 2, 1, 1);
+
+  return grid;
 };
 
 // Discrete zoom levels matching the button zoom levels
@@ -118,7 +206,26 @@ const findClosestZoomIndex = (zoomValue: number): number => {
 
 export default function GameBoard({ levelId = "level_1" }: { levelId?: string }) {
   // Grid state (only thing React manages now)
-  const [grid, setGrid] = useState<GridCell[][]>(createEmptyGrid);
+  // Use starter office for level 1, empty grid for other levels
+  const [grid, setGrid] = useState<GridCell[][]>(() => {
+    const initialGrid = levelId === "level_1" ? createLevel1StarterOffice() : createEmptyGrid();
+
+    // Count furniture in initial grid
+    let furnitureCount = 0;
+    for (let y = 0; y < initialGrid.length; y++) {
+      for (let x = 0; x < initialGrid[y].length; x++) {
+        if (initialGrid[y][x].buildingId) {
+          furnitureCount++;
+          if (furnitureCount <= 3) {
+            console.log("[GameBoard] Furniture at (" + x + "," + y + "):", initialGrid[y][x].buildingId);
+          }
+        }
+      }
+    }
+    console.log("[GameBoard] Created initial grid with", furnitureCount, "furniture cells for level:", levelId);
+
+    return initialGrid;
+  });
 
   // UI state
   const [selectedTool, setSelectedTool] = useState<ToolType>(ToolType.None);
@@ -177,7 +284,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [economy, setEconomy] = useState<GameEconomy>({
-    cash: 50000, // Starting capital
+    cash: 20000, // Starting capital
     monthlyRevenue: 0,
     monthlyExpenses: 0,
     lastMonthTick: Date.now(),
@@ -372,27 +479,32 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
             },
           });
         }
-
-        // Check for victory based on current level
-        const currentLevel = getLevel(levelId);
-        if (currentLevel && employees.length >= currentLevel.goals.employees && clients.length >= currentLevel.goals.clients) {
-          setIsPaused(true);
-          setModalState({
-            isVisible: true,
-            title: levelId === "level_1" ? "Level Complete! 🌟" : "Victory! 🎉",
-            message: `Congratulations! You've reached the goals for ${currentLevel.name}!\n\nCurrent Stats:\nEmployees: ${employees.length}\nClients: ${clients.length}\nCash: $${economy.cash.toLocaleString()}`,
-            showCancel: false,
-            onConfirm: () => {
-              setModalState((prev) => ({ ...prev, isVisible: false }));
-              setIsPaused(false);
-            },
-          });
-        }
       }
     }, 1000); // Check every second
 
     return () => clearInterval(interval);
   }, [economy, clients, employees, grid, isPaused]);
+
+  // Check for victory
+  useEffect(() => {
+    if (isPaused) return;
+
+    const currentLevel = getLevel(levelId);
+    if (currentLevel && employees.length >= currentLevel.goals.employees && clients.length >= currentLevel.goals.clients) {
+      setIsPaused(true);
+      setModalState({
+        isVisible: true,
+        title: levelId === "level_1" ? "Level Complete! 🌟" : "Victory! 🎉",
+        message: `Congratulations! You've reached the goals for ${currentLevel.name}!\n\nCurrent Stats:\nEmployees: ${employees.length}\nClients: ${clients.length}\nCash: $${economy.cash.toLocaleString()}`,
+        showCancel: false,
+        onConfirm: () => {
+          setModalState((prev) => ({ ...prev, isVisible: false }));
+          setIsPaused(false);
+        },
+      });
+    }
+  }, [employees.length, clients.length, levelId, isPaused]);
+
 
   // Handle tile click (grid modifications)
   const handleTileClick = useCallback(

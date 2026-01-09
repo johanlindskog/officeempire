@@ -184,55 +184,19 @@ export const FURNITURE: Record<string, FurnitureDefinition> = {
     cost: 400,
   },
 
-  // DECOR
-  "office-plant": {
-    id: "office-plant",
-    name: "Office Plant",
-    category: "decor",
-    furnitureType: FurnitureType.Desk, // Decor doesn't need assignment
-    footprint: { width: 1, height: 1 },
-    sprites: {
-      south: "/Furniture/1x1plant.png",
-    },
-    icon: "🪴",
-    cost: 200,
-  },
-  "bookshelf": {
-    id: "bookshelf",
-    name: "Bookshelf",
-    category: "decor",
-    furnitureType: FurnitureType.Desk, // Decor doesn't need assignment
-    footprint: { width: 1, height: 2 },
-    sprites: {
-      south: "/Furniture/1x2bookshelf.png",
-    },
-    icon: "📚",
-    cost: 400,
-  },
-  "filing-cabinet": {
-    id: "filing-cabinet",
-    name: "Filing Cabinet",
-    category: "decor",
-    furnitureType: FurnitureType.Desk, // Decor doesn't need assignment
-    footprint: { width: 1, height: 1 },
-    sprites: {
-      south: "/Furniture/1x1filing_cabinet.png",
-    },
-    icon: "🗄️",
-    cost: 300,
-  },
-  "reception-desk": {
-    id: "reception-desk",
-    name: "Reception Desk",
-    category: "decor",
-    furnitureType: FurnitureType.Reception,
-    footprint: { width: 2, height: 1 },
-    sprites: {
-      south: "/Furniture/2x1reception.png",
-    },
-    icon: "🏢",
-    cost: 1500,
-  },
+  // DECOR - Temporarily disabled until sprites are created
+  // "office-plant": {
+  //   id: "office-plant",
+  //   name: "Office Plant",
+  //   category: "decor",
+  //   furnitureType: FurnitureType.Desk,
+  //   footprint: { width: 1, height: 1 },
+  //   sprites: {
+  //     south: "/Furniture/1x1plant.png",
+  //   },
+  //   icon: "🪴",
+  //   cost: 200,
+  // },
 };
 
 // Helper to get furniture by ID

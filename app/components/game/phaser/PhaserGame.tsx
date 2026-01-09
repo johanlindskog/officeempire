@@ -67,6 +67,8 @@ const PhaserGame = forwardRef<PhaserGameHandle, PhaserGameProps>(
     const sceneRef = useRef<MainScene | null>(null);
     // Track zoom value set via zoomAtPoint to skip re-centering in useEffect
     const zoomFromAtPoint = useRef<number | null>(null);
+    // Track if initial grid has been loaded to the scene
+    const initialGridLoaded = useRef(false);
 
     // Expose methods to parent via ref
     useImperativeHandle(
@@ -165,6 +167,15 @@ const PhaserGame = forwardRef<PhaserGameHandle, PhaserGameProps>(
         scene.events.on("zoomChanged", (newZoom: number) => {
           onZoomChange?.(newZoom);
         });
+
+        // Initialize grid with current state (important for pre-placed furniture)
+        if (grid.length > 0) {
+          console.log("[PhaserGame] Ready event - initializing grid");
+          console.log("[PhaserGame] Grid sample (24,16):", grid[16]?.[24]);
+          console.log("[PhaserGame] Grid sample (24,17):", grid[17]?.[24]);
+          scene.updateGrid(grid);
+          console.log("[PhaserGame] updateGrid called");
+        }
       });
 
       return () => {
@@ -177,7 +188,9 @@ const PhaserGame = forwardRef<PhaserGameHandle, PhaserGameProps>(
     // Update grid when it changes (differential update in scene)
     useEffect(() => {
       if (sceneRef.current && grid.length > 0) {
+        console.log("[PhaserGame] useEffect - grid changed, calling updateGrid");
         sceneRef.current.updateGrid(grid);
+        initialGridLoaded.current = true;
       }
     }, [grid]);
 

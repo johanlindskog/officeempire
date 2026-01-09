@@ -25,7 +25,12 @@
       "Bash(echo:*)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(file:*)"
+      "Bash(file:*)",
+      "Bash(do echo \"$f\")",
+      "Bash(curl:*)",
+      "Bash(/opt/homebrew/bin/npm run dev)",
+      "Bash(kill:*)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

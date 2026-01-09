@@ -12,7 +12,7 @@ export const LEVELS: LevelConfig[] = [
     {
         id: "level_1",
         name: "Level 1: The Startup",
-        description: "Build your first office! Reach 10 employees and acquire 20 clients.",
+        description: "Welcome to your starter office! You begin with 10 workstations (6 basic desks, 2 premium, 1 executive, 1 standing), a small meeting room, and a break area. Expand your office to reach 10 employees and acquire 20 clients!",
         goals: {
             employees: 10,
             clients: 20,

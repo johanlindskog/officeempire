@@ -26,7 +26,7 @@ export function createGameConfig(
     parent,
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
-    backgroundColor: "#3d5560",
+    backgroundColor: "#2a2a2a", // Dark charcoal for office building exterior
     pixelArt: true, // Crisp pixel rendering
     roundPixels: true,
     antialias: false,
