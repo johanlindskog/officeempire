@@ -30,6 +30,9 @@ export default function Dashboard({
   // State for real-time countdown
   const [timeUntilNextMonth, setTimeUntilNextMonth] = useState(0);
 
+  // State for mobile collapse
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   // Update countdown every second
   useEffect(() => {
     const updateCountdown = () => {
@@ -66,6 +69,27 @@ export default function Dashboard({
       }}
       className="mobile-responsive-dashboard"
     >
+      {/* Mobile toggle button */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="dashboard-toggle-mobile"
+        style={{
+          display: "none",
+          position: "absolute",
+          top: 4,
+          right: 4,
+          background: "rgba(0,0,0,0.3)",
+          border: "1px solid #fff",
+          borderRadius: 2,
+          color: "#fff",
+          padding: "2px 6px",
+          fontSize: 12,
+          cursor: "pointer",
+        }}
+      >
+        {isCollapsed ? "▼" : "▲"}
+      </button>
+
       <div
         style={{
           fontWeight: "bold",
@@ -78,6 +102,9 @@ export default function Dashboard({
       >
         💼 Consultancy Dashboard
       </div>
+
+      {!isCollapsed && (
+        <>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {/* Cash */}
@@ -233,6 +260,8 @@ export default function Dashboard({
         >
           ⏭ Go to Next Month
         </button>
+      )}
+      </>
       )}
     </div>
   );

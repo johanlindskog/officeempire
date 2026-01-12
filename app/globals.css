@@ -217,21 +217,42 @@ body {
     padding: 8px;
   }
 
-  /* Mobile Dashboard adjustments */
+  /* Mobile Dashboard adjustments - Make it collapsible/compact */
   .mobile-responsive-dashboard {
     position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    right: 10px !important;
+    top: 5px !important;
+    left: 5px !important;
+    right: 5px !important;
     width: auto !important;
     max-width: none !important;
-    font-size: 12px !important;
-    padding: 6px 8px !important;
+    font-size: 10px !important;
+    padding: 4px 6px !important;
     z-index: 1000 !important;
   }
 
   .mobile-responsive-dashboard > div {
-    gap: 4px !important;
+    gap: 2px !important;
+  }
+
+  .mobile-responsive-dashboard > div > div {
+    font-size: 10px !important;
+  }
+
+  /* Hide dashboard title on mobile to save space */
+  .mobile-responsive-dashboard > div:first-child {
+    display: none !important;
+  }
+
+  /* Make advance month button smaller on mobile */
+  .mobile-responsive-dashboard button:not(.dashboard-toggle-mobile) {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    margin-top: 2px !important;
+  }
+
+  /* Show toggle button on mobile */
+  .dashboard-toggle-mobile {
+    display: block !important;
   }
 
   /* Top button bar mobile adjustments */
@@ -260,8 +281,27 @@ body {
   /* Bottom management bar adjustments */
   .bottom-management-bar {
     flex-direction: column !important;
-    max-height: 40vh !important;
+    max-height: 35vh !important;
     overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  .bottom-management-bar .rct-titlebar {
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+  }
+
+  /* Make employee/client cards more compact */
+  .bottom-management-bar button {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    min-height: 36px !important;
+  }
+
+  /* Adjust scrollable areas in bottom panels */
+  .bottom-management-bar > div {
+    min-height: 150px !important;
+    max-height: 200px !important;
   }
 
   /* Main Menu mobile adjustments */
@@ -279,5 +319,53 @@ body {
   /* Adjust game title for mobile */
   h1 {
     font-size: 48px !important;
+  }
+
+  /* Modal improvements for mobile */
+  .rct-panel[style*="position: fixed"] {
+    max-width: 90vw !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    left: 5vw !important;
+    right: 5vw !important;
+    top: 10vh !important;
+  }
+
+  /* Improve game canvas area on mobile */
+  body {
+    overflow: hidden !important;
+  }
+
+  /* Add touch-friendly spacing */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Better scrollbar for mobile */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+
+  /* Hide top menu button on very small screens */
+  @media (max-width: 480px) {
+    .top-button-bar button span {
+      display: none;
+    }
+
+    .top-button-bar button {
+      padding: 0 !important;
+      width: 36px !important;
+      height: 36px !important;
+    }
   }
 }
