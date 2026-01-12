@@ -217,25 +217,28 @@ body {
     padding: 8px;
   }
 
-  /* Mobile Dashboard adjustments - Make it collapsible/compact */
+  /* Mobile Dashboard adjustments - Ultra compact */
   .mobile-responsive-dashboard {
     position: fixed !important;
-    top: 5px !important;
-    left: 5px !important;
-    right: 5px !important;
+    top: 3px !important;
+    left: 3px !important;
+    right: 3px !important;
     width: auto !important;
     max-width: none !important;
-    font-size: 10px !important;
-    padding: 4px 6px !important;
+    font-size: 9px !important;
+    padding: 2px 4px !important;
     z-index: 1000 !important;
+    line-height: 1.2 !important;
   }
 
   .mobile-responsive-dashboard > div {
-    gap: 2px !important;
+    gap: 1px !important;
+    margin-bottom: 2px !important;
   }
 
   .mobile-responsive-dashboard > div > div {
-    font-size: 10px !important;
+    font-size: 9px !important;
+    padding: 1px 0 !important;
   }
 
   /* Hide dashboard title on mobile to save space */
@@ -243,28 +246,39 @@ body {
     display: none !important;
   }
 
-  /* Make advance month button smaller on mobile */
+  /* Make advance month button even smaller on mobile */
   .mobile-responsive-dashboard button:not(.dashboard-toggle-mobile) {
-    font-size: 10px !important;
-    padding: 4px 8px !important;
-    margin-top: 2px !important;
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+    margin-top: 1px !important;
+    min-height: 24px !important;
   }
 
-  /* Show toggle button on mobile */
+  /* Show toggle button on mobile - make it more compact */
   .dashboard-toggle-mobile {
     display: block !important;
+    font-size: 10px !important;
+    padding: 1px 4px !important;
+    min-height: 20px !important;
   }
 
-  /* Top button bar mobile adjustments */
+  /* Compact the stats display */
+  .mobile-responsive-dashboard span {
+    font-size: 9px !important;
+  }
+
+  /* Top button bar mobile adjustments - more compact */
   .top-button-bar {
     flex-wrap: wrap !important;
     max-width: 100vw !important;
+    gap: 2px !important;
   }
 
   .top-button-bar button {
-    font-size: 14px !important;
-    min-height: 40px !important;
-    min-width: 40px !important;
+    font-size: 11px !important;
+    min-height: 36px !important;
+    min-width: 36px !important;
+    padding: 4px 6px !important;
   }
 
   /* Hide music player on mobile to save space */
@@ -278,30 +292,40 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Bottom management bar adjustments */
+  /* Bottom management bar adjustments - more compact */
   .bottom-management-bar {
     flex-direction: column !important;
-    max-height: 35vh !important;
+    max-height: 30vh !important;
     overflow-y: auto !important;
     height: auto !important;
+    font-size: 10px !important;
   }
 
   .bottom-management-bar .rct-titlebar {
-    font-size: 12px !important;
-    padding: 4px 6px !important;
-  }
-
-  /* Make employee/client cards more compact */
-  .bottom-management-bar button {
     font-size: 11px !important;
-    padding: 6px 10px !important;
-    min-height: 36px !important;
+    padding: 3px 5px !important;
+    line-height: 1.2 !important;
   }
 
-  /* Adjust scrollable areas in bottom panels */
+  /* Make employee/client cards even more compact */
+  .bottom-management-bar button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 32px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Adjust scrollable areas in bottom panels - smaller */
   .bottom-management-bar > div {
-    min-height: 150px !important;
-    max-height: 200px !important;
+    min-height: 120px !important;
+    max-height: 160px !important;
+  }
+
+  /* Make text in bottom panels smaller */
+  .bottom-management-bar span,
+  .bottom-management-bar div {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
   }
 
   /* Main Menu mobile adjustments */

@@ -30,8 +30,13 @@ export default function Dashboard({
   // State for real-time countdown
   const [timeUntilNextMonth, setTimeUntilNextMonth] = useState(0);
 
-  // State for mobile collapse
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // State for mobile collapse - default to collapsed on mobile
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768;
+    }
+    return false;
+  });
 
   // Update countdown every second
   useEffect(() => {
