@@ -306,7 +306,7 @@ export default function ToolWindow({
                         const rect = e.currentTarget.getBoundingClientRect();
                         setHoveredItem({
                           name: item.name,
-                          cost: item.cost,
+                          cost: 'cost' in item ? item.cost : 0,
                           x: rect.left + rect.width / 2,
                           y: rect.bottom + 10
                         });
