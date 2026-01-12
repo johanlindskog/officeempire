@@ -32,7 +32,9 @@
       "Bash(kill:*)",
       "Bash(xargs kill:*)",
       "Bash(git remote:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

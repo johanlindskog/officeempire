@@ -49,6 +49,7 @@ export default function BottomManagementBar({
 
   return (
     <div
+      className="bottom-management-bar"
       style={{
         position: "fixed",
         bottom: 0,

@@ -1746,6 +1746,7 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
     >
       {/* Top Left - Back and Zoom buttons */}
       <div
+        className="top-button-bar"
         style={{
           position: "absolute",
           top: 0,
