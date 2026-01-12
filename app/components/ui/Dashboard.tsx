@@ -1,6 +1,9 @@
 // Dashboard Component - Displays economy and business stats
 // Positioned at top-left corner of the screen
 
+"use client";
+
+import { useState, useEffect } from "react";
 import { GameEconomy, Employee, Client } from "../game/types";
 
 interface DashboardProps {
@@ -11,8 +14,7 @@ interface DashboardProps {
     employees: number;
     clients: number;
   };
-  onEmployeesClick: () => void;
-  onClientsClick: () => void;
+  onAdvanceMonth?: () => void;
 }
 
 export default function Dashboard({
@@ -20,11 +22,29 @@ export default function Dashboard({
   employees,
   clients,
   goals,
-  onEmployeesClick,
-  onClientsClick,
+  onAdvanceMonth,
 }: DashboardProps) {
   const profitLoss = economy.monthlyRevenue - economy.monthlyExpenses;
   const isProfitable = profitLoss >= 0;
+
+  // State for real-time countdown
+  const [timeUntilNextMonth, setTimeUntilNextMonth] = useState(0);
+
+  // Update countdown every second
+  useEffect(() => {
+    const updateCountdown = () => {
+      const remaining = Math.max(0, 30000 - (Date.now() - economy.lastMonthTick));
+      setTimeUntilNextMonth(Math.round(remaining / 1000));
+    };
+
+    // Initial update
+    updateCountdown();
+
+    // Update every second
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [economy.lastMonthTick]);
 
   return (
     <div
@@ -127,25 +147,12 @@ export default function Dashboard({
           </span>
         </div>
 
-        {/* Employees (clickable) */}
+        {/* Employees */}
         <div
-          onClick={onEmployeesClick}
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            cursor: "pointer",
-            padding: "4px 6px",
-            margin: "4px -6px 0",
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 3,
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
           }}
         >
           <span>👔 Employees:</span>
@@ -154,25 +161,12 @@ export default function Dashboard({
           </span>
         </div>
 
-        {/* Clients (clickable) */}
+        {/* Clients */}
         <div
-          onClick={onClientsClick}
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            cursor: "pointer",
-            padding: "4px 6px",
-            margin: "0 -6px",
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 3,
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
           }}
         >
           <span>🤝 Clients:</span>
@@ -193,8 +187,51 @@ export default function Dashboard({
           color: "rgba(255,255,255,0.7)",
         }}
       >
-        Next month: {Math.round((30000 - (Date.now() - economy.lastMonthTick)) / 1000)}s
+        Next month: {timeUntilNextMonth}s
       </div>
+
+      {/* Advance Month Button */}
+      {onAdvanceMonth && (
+        <button
+          onClick={onAdvanceMonth}
+          style={{
+            marginTop: 6,
+            width: "100%",
+            padding: "6px 12px",
+            backgroundColor: "#6CA6E8",
+            border: "2px solid",
+            borderColor: "#A3CDF9 #366BA8 #366BA8 #A3CDF9",
+            borderRadius: 2,
+            cursor: "pointer",
+            fontFamily: "monospace",
+            fontSize: 12,
+            fontWeight: "bold",
+            color: "#000",
+            transition: "filter 0.1s",
+            boxShadow: "1px 1px 0px #244B7A",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.filter = "brightness(1.1)")
+          }
+          onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
+          onMouseDown={(e) => {
+            e.currentTarget.style.filter = "brightness(0.9)";
+            e.currentTarget.style.borderColor =
+              "#366BA8 #A3CDF9 #A3CDF9 #366BA8";
+            e.currentTarget.style.transform = "translate(1px, 1px)";
+            e.currentTarget.style.boxShadow = "inset 1px 1px 0px #244B7A";
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.filter = "brightness(1.1)";
+            e.currentTarget.style.borderColor =
+              "#A3CDF9 #366BA8 #366BA8 #A3CDF9";
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = "1px 1px 0px #244B7A";
+          }}
+        >
+          ⏭ Go to Next Month
+        </button>
+      )}
     </div>
   );
 }

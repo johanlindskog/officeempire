@@ -24,8 +24,8 @@ export default function ClientPanel({
   onAcquire,
 }: ClientPanelProps) {
   const [position, setPosition] = useState({
-    x: typeof window !== "undefined" ? window.innerWidth / 2 + 10 : 100,
-    y: typeof window !== "undefined" ? window.innerHeight / 2 - 250 : 100,
+    x: 920,
+    y: 60,
   });
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });

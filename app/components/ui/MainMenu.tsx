@@ -107,6 +107,18 @@ export default function MainMenu({ onStartGame }: MainMenuProps) {
                 >
                     About
                 </button>
+
+                <button
+                    className="rct-button"
+                    onClick={() => window.open("https://officeempire.lovable.app/", "_blank")}
+                    style={{
+                        fontSize: 24,
+                        padding: "12px 24px",
+                        textAlign: "center",
+                    }}
+                >
+                    Feedback
+                </button>
             </div>
 
             {/* About Modal */}

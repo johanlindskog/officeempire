@@ -281,6 +281,34 @@ export class MainScene extends Phaser.Scene {
     // Initial render
     this.renderGrid();
 
+    // Set initial camera position to center on the office area
+    const camera = this.cameras.main;
+    const initialZoom = 1.2;
+
+    camera.setZoom(initialZoom);
+
+    // Calculate center of office area (tiles roughly from 11,11 to 37,37)
+    const officeCenterX = 24;
+    const officeCenterY = 24;
+    const centerPos = this.gridToScreen(officeCenterX, officeCenterY);
+
+    // Manual adjustment to position office tiles as shown in target screenshot
+    // Shift viewport to move content into better position
+    const adjustX = 300; // Move viewport right (shows content more to the left)
+    const adjustY = 200; // Move viewport down (shows content more up)
+
+    camera.scrollX = centerPos.x - camera.width / (2 * initialZoom) + adjustX;
+    camera.scrollY = centerPos.y - camera.height / (2 * initialZoom) + adjustY;
+
+    console.log('[MainScene] Office center grid:', officeCenterX, officeCenterY);
+    console.log('[MainScene] Screen position:', centerPos);
+    console.log('[MainScene] Camera scroll set to:', camera.scrollX, camera.scrollY);
+
+    // Update our tracking variables
+    this.baseScrollX = camera.scrollX;
+    this.baseScrollY = camera.scrollY;
+    this.zoomLevel = initialZoom;
+
     // Load character GIF animations asynchronously
     this.loadCharacterAnimations();
 

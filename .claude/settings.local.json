@@ -30,7 +30,9 @@
       "Bash(curl:*)",
       "Bash(/opt/homebrew/bin/npm run dev)",
       "Bash(kill:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(git remote:*)",
+      "Bash(git add:*)"
     ]
   }
 }

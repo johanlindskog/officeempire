@@ -13,10 +13,13 @@ export default function Home() {
     setIsPlaying(true);
   };
 
+  const handleReturnToMenu = () => {
+    setIsPlaying(false);
+  };
+
   if (!isPlaying) {
     return <MainMenu onStartGame={handleStartGame} />;
   }
 
-  // @ts-ignore - GameBoard prop will be added next
-  return <GameBoard levelId={currentLevelId} />;
+  return <GameBoard levelId={currentLevelId} onReturnToMenu={handleReturnToMenu} />;
 }

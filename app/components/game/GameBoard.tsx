@@ -75,8 +75,8 @@ import LoadWindow from "../ui/LoadWindow";
 import Modal from "../ui/Modal";
 import PromptModal from "../ui/PromptModal";
 import Dashboard from "../ui/Dashboard";
-import EmployeePanel from "../ui/EmployeePanel";
-import ClientPanel from "../ui/ClientPanel";
+import BottomManagementBar from "../ui/BottomManagementBar";
+import TutorialModal from "../ui/TutorialModal";
 
 // Initialize grid with a center square of office floor tiles (matching Phaser's initialization)
 const createEmptyGrid = (): GridCell[][] => {
@@ -186,6 +186,46 @@ const createLevel1StarterOffice = (): GridCell[][] => {
   return grid;
 };
 
+// Create starter office layout for Level 2 (just a founder desk)
+const createLevel2StarterOffice = (): GridCell[][] => {
+  const grid = createEmptyGrid();
+  const squareSize = 26;
+  const start = Math.floor((GRID_WIDTH - squareSize) / 2);
+  const centerX = start + Math.floor(squareSize / 2);
+  const centerY = start + Math.floor(squareSize / 2);
+
+  // Look up furniture definition to get logical properties
+  const furniture = getFurniture("executive-desk");
+  const furnitureType = furniture?.furnitureType;
+  const capacity = furniture?.capacity;
+
+  // Place a single executive desk for the founder in the center
+  grid[centerY][centerX] = {
+    ...grid[centerY][centerX],
+    type: TileType.Building,
+    buildingId: "executive-desk",
+    buildingOrientation: Direction.Down,
+    isOrigin: true,
+    furnitureType,
+    capacity,
+  };
+
+  // Executive desk is 2x1, place the second cell
+  grid[centerY][centerX + 1] = {
+    ...grid[centerY][centerX + 1],
+    type: TileType.Building,
+    buildingId: "executive-desk",
+    buildingOrientation: Direction.Down,
+    isOrigin: false,
+    originX: centerX,
+    originY: centerY,
+    furnitureType,
+    capacity,
+  };
+
+  return grid;
+};
+
 // Discrete zoom levels matching the button zoom levels
 const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 4];
 const SCROLL_THRESHOLD = 100; // Amount of scroll needed to change zoom level
@@ -204,11 +244,18 @@ const findClosestZoomIndex = (zoomValue: number): number => {
   return closestIndex;
 };
 
-export default function GameBoard({ levelId = "level_1" }: { levelId?: string }) {
+export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { levelId?: string; onReturnToMenu?: () => void }) {
   // Grid state (only thing React manages now)
-  // Use starter office for level 1, empty grid for other levels
+  // Use starter office for level 1, level 2 starter for level 2, empty grid for other levels
   const [grid, setGrid] = useState<GridCell[][]>(() => {
-    const initialGrid = levelId === "level_1" ? createLevel1StarterOffice() : createEmptyGrid();
+    let initialGrid: GridCell[][];
+    if (levelId === "level_1") {
+      initialGrid = createLevel1StarterOffice();
+    } else if (levelId === "level_2") {
+      initialGrid = createLevel2StarterOffice();
+    } else {
+      initialGrid = createEmptyGrid();
+    }
 
     // Count furniture in initial grid
     let furnitureCount = 0;
@@ -229,7 +276,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
 
   // UI state
   const [selectedTool, setSelectedTool] = useState<ToolType>(ToolType.None);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(1.2);
   const [debugPaths, setDebugPaths] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [isToolWindowVisible, setIsToolWindowVisible] = useState(false);
@@ -241,8 +288,14 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
     null
   );
   const [isLoadWindowVisible, setIsLoadWindowVisible] = useState(false);
-  const [isEmployeePanelVisible, setIsEmployeePanelVisible] = useState(false);
-  const [isClientPanelVisible, setIsClientPanelVisible] = useState(false);
+  const [isTutorialVisible, setIsTutorialVisible] = useState(() => {
+    // Show tutorial for level 1 if user hasn't seen it before
+    if (levelId === "level_1") {
+      const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+      return !hasSeenTutorial;
+    }
+    return false;
+  });
   const [modalState, setModalState] = useState<{
     isVisible: boolean;
     title: string;
@@ -294,10 +347,27 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
   // Initialize game with starting employees and clients
   useEffect(() => {
     if (!gameInitialized) {
-      // Add founder employee (you!)
+      // Find an available desk for the founder
+      const founderDesk = findAvailableDesk(grid);
+      
+      // Add founder employee (you!) and assign to desk if available
       const founder = generateEmployee(0);
       founder.salary = 10000;
       founder.name = "You (Founder)";
+      
+      if (founderDesk) {
+        founder.assignedDeskId = `${founderDesk.x},${founderDesk.y}`;
+        // Mark the desk as assigned in the grid
+        setGrid((prevGrid) => {
+          const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
+          newGrid[founderDesk.y][founderDesk.x] = {
+            ...newGrid[founderDesk.y][founderDesk.x],
+            assignedEmployeeId: founder.id,
+          };
+          return newGrid;
+        });
+      }
+      
       setEmployees([founder]);
 
       // Add 2 starting clients
@@ -305,6 +375,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
 
       setGameInitialized(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameInitialized]);
 
   // Detect mobile device
@@ -324,9 +395,26 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
   // Ref to Phaser game for spawning entities
   const phaserGameRef = useRef<PhaserGameHandle>(null);
 
+  // Ref to map container for scrolling to center
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
   // Ref to track accumulated scroll delta for zoom
   const scrollAccumulatorRef = useRef(0);
   const scrollDirectionRef = useRef<number | null>(null); // Track scroll direction: positive = down, negative = up
+
+  // Scroll the map container to center the canvas when it loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapContainerRef.current) {
+        const container = mapContainerRef.current;
+        const scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
+        const scrollTop = (container.scrollHeight - container.clientHeight) / 2;
+        container.scrollLeft = scrollLeft;
+        container.scrollTop = scrollTop;
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Reset building orientation to south when switching buildings
   useEffect(() => {
@@ -419,9 +507,65 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
   // Pause state
   const [isPaused, setIsPaused] = useState(false);
 
+  // Handler to advance to next month immediately
+  const handleAdvanceMonth = useCallback(() => {
+    // Calculate revenue from clients
+    const revenue = calculateMonthlyRevenue(clients);
+
+    // Calculate expenses
+    const salaries = calculateMonthlySalaries(employees);
+    const deskCount = grid
+      .flat()
+      .filter((cell) => cell.furnitureType === "desk" && cell.isOrigin).length;
+    const rent = deskCount * 100; // $100/desk/month
+    const expenses = salaries + rent;
+
+    // Update economy
+    setEconomy((prev) => ({
+      cash: prev.cash + revenue - expenses,
+      monthlyRevenue: revenue,
+      monthlyExpenses: expenses,
+      lastMonthTick: Date.now(), // Reset the timer
+    }));
+
+    // Apply client churn
+    setClients((prev) => applyClientChurn(prev, employees.length));
+
+    // Passive client acquisition (if 5+ employees)
+    if (shouldAcquirePassiveClient(employees.length) && clients.length < 100) {
+      setClients((prev) => [...prev, generateClient()]);
+    }
+
+    // Check for bankruptcy
+    if (economy.cash + revenue - expenses < -expenses && expenses > 0) {
+      setIsPaused(true);
+      setModalState({
+        isVisible: true,
+        title: "Bankruptcy!",
+        message: `Your consultancy has run out of money. Game Over!\n\nFinal Stats:\nEmployees: ${employees.length}\nClients: ${clients.length}\nCash: $${(economy.cash + revenue - expenses).toLocaleString()}`,
+        showCancel: false,
+        onConfirm: () => {
+          setModalState((prev) => ({ ...prev, isVisible: false }));
+          // Reset game state
+          setEmployees([]);
+          setClients([]);
+          setEconomy({
+            cash: 50000,
+            monthlyRevenue: 0,
+            monthlyExpenses: 0,
+            lastMonthTick: Date.now(),
+          });
+          setIsPaused(false);
+        },
+      });
+    }
+
+    playDoubleClickSound();
+  }, [economy, clients, employees, grid]);
+
   // Office Simulator: Monthly Economic Cycle
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || isTutorialVisible) return;
 
     const monthDuration = 30000; // 30 seconds = 1 game month
 
@@ -483,7 +627,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
     }, 1000); // Check every second
 
     return () => clearInterval(interval);
-  }, [economy, clients, employees, grid, isPaused]);
+  }, [economy, clients, employees, grid, isPaused, isTutorialVisible]);
 
   // Check for victory
   useEffect(() => {
@@ -499,11 +643,15 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
         showCancel: false,
         onConfirm: () => {
           setModalState((prev) => ({ ...prev, isVisible: false }));
-          setIsPaused(false);
+          if (onReturnToMenu) {
+            onReturnToMenu();
+          } else {
+            setIsPaused(false);
+          }
         },
       });
     }
-  }, [employees.length, clients.length, levelId, isPaused]);
+  }, [employees.length, clients.length, levelId, isPaused, onReturnToMenu]);
 
 
   // Handle tile click (grid modifications)
@@ -1249,10 +1397,10 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
 
   // Office Simulator: Employee Management Functions
   const handleHireEmployee = useCallback(() => {
-    // Check if there are available desks
-    const availableDesks = countAvailableDesks(grid);
+    // Find an available desk
+    const availableDesk = findAvailableDesk(grid);
 
-    if (availableDesks === 0) {
+    if (!availableDesk) {
       setModalState({
         isVisible: true,
         title: "No Available Desks",
@@ -1280,8 +1428,20 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
       return;
     }
 
-    // Generate new employee
+    // Generate new employee and assign to the desk
     const newEmployee = generateEmployee(5000);
+    newEmployee.assignedDeskId = `${availableDesk.x},${availableDesk.y}`;
+    
+    // Mark the desk as assigned in the grid
+    setGrid((prevGrid) => {
+      const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
+      newGrid[availableDesk.y][availableDesk.x] = {
+        ...newGrid[availableDesk.y][availableDesk.x],
+        assignedEmployeeId: newEmployee.id,
+      };
+      return newGrid;
+    });
+    
     setEmployees((prev) => [...prev, newEmployee]);
 
     // Deduct hiring cost
@@ -1584,7 +1744,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
         background: "#4a5d6a",
       }}
     >
-      {/* Top Left - Save/Load and Zoom buttons */}
+      {/* Top Left - Back and Zoom buttons */}
       <div
         style={{
           position: "absolute",
@@ -1596,30 +1756,34 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
         }}
         onWheel={(e) => e.stopPropagation()}
       >
-        {/* Save button */}
+        {/* Back to Menu button */}
         <button
           onClick={() => {
-            handleSaveGame();
+            if (onReturnToMenu) {
+              onReturnToMenu();
+            }
             playDoubleClickSound();
           }}
-          title="Save Game"
+          title="Back to Menu"
           className="rct-blue-button-interactive"
           style={{
-            background: "#B0B0B0",
+            background: "#6CA6E8",
             border: "2px solid",
-            borderColor: "#D0D0D0 #707070 #707070 #D0D0D0",
-            padding: 0,
+            borderColor: "#A3CDF9 #366BA8 #366BA8 #A3CDF9",
+            padding: "0 8px",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 0,
             borderTop: "none",
-            boxShadow: "1px 1px 0px #505050",
-            imageRendering: "pixelated",
+            boxShadow: "1px 1px 0px #244B7A",
             transition: "filter 0.1s",
-            width: 48,
             height: 48,
+            fontFamily: "monospace",
+            fontSize: 20,
+            fontWeight: "bold",
+            color: "#000",
           }}
           onMouseEnter={(e) =>
             (e.currentTarget.style.filter = "brightness(1.1)")
@@ -1628,81 +1792,19 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
           onMouseDown={(e) => {
             e.currentTarget.style.filter = "brightness(0.9)";
             e.currentTarget.style.borderColor =
-              "#707070 #D0D0D0 #D0D0D0 #707070";
+              "#366BA8 #A3CDF9 #A3CDF9 #366BA8";
             e.currentTarget.style.transform = "translate(1px, 1px)";
-            e.currentTarget.style.boxShadow = "inset 1px 1px 0px #505050";
+            e.currentTarget.style.boxShadow = "inset 1px 1px 0px #244B7A";
           }}
           onMouseUp={(e) => {
             e.currentTarget.style.filter = "brightness(1.1)";
             e.currentTarget.style.borderColor =
-              "#D0D0D0 #707070 #707070 #D0D0D0";
+              "#A3CDF9 #366BA8 #366BA8 #A3CDF9";
             e.currentTarget.style.transform = "none";
-            e.currentTarget.style.boxShadow = "1px 1px 0px #505050";
+            e.currentTarget.style.boxShadow = "1px 1px 0px #244B7A";
           }}
         >
-          <img
-            src="/UI/save.png"
-            alt="Save"
-            style={{
-              width: 48,
-              height: 48,
-              display: "block",
-            }}
-          />
-        </button>
-        {/* Load button */}
-        <button
-          onClick={() => {
-            setIsLoadWindowVisible(true);
-            playDoubleClickSound();
-          }}
-          title="Load Game"
-          className="rct-blue-button-interactive"
-          style={{
-            background: "#B0B0B0",
-            border: "2px solid",
-            borderColor: "#D0D0D0 #707070 #707070 #D0D0D0",
-            padding: 0,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 0,
-            borderTop: "none",
-            boxShadow: "1px 1px 0px #505050",
-            imageRendering: "pixelated",
-            transition: "filter 0.1s",
-            width: 48,
-            height: 48,
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.filter = "brightness(1.1)")
-          }
-          onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
-          onMouseDown={(e) => {
-            e.currentTarget.style.filter = "brightness(0.9)";
-            e.currentTarget.style.borderColor =
-              "#707070 #D0D0D0 #D0D0D0 #707070";
-            e.currentTarget.style.transform = "translate(1px, 1px)";
-            e.currentTarget.style.boxShadow = "inset 1px 1px 0px #505050";
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.filter = "brightness(1.1)";
-            e.currentTarget.style.borderColor =
-              "#D0D0D0 #707070 #707070 #D0D0D0";
-            e.currentTarget.style.transform = "none";
-            e.currentTarget.style.boxShadow = "1px 1px 0px #505050";
-          }}
-        >
-          <img
-            src="/UI/load.png"
-            alt="Load"
-            style={{
-              width: 48,
-              height: 48,
-              display: "block",
-            }}
-          />
+          ← MENU
         </button>
         <button
           onClick={() => {
@@ -1810,6 +1912,61 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
             }}
           />
         </button>
+        {/* Tutorial button - Only show for Level 1 */}
+        {levelId === "level_1" && (
+          <button
+            onClick={() => {
+              setIsTutorialVisible(true);
+              playOpenSound();
+            }}
+            title="Tutorial"
+            className="rct-blue-button-interactive"
+            style={{
+              background: "#6CA6E8",
+              border: "2px solid",
+              borderColor: "#A3CDF9 #366BA8 #366BA8 #A3CDF9",
+              padding: 0,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 0,
+              borderTop: "none",
+              boxShadow: "1px 1px 0px #244B7A",
+              imageRendering: "pixelated",
+              transition: "filter 0.1s",
+              width: 48,
+              height: 48,
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.filter = "brightness(1.1)")
+            }
+            onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
+            onMouseDown={(e) => {
+              e.currentTarget.style.filter = "brightness(0.9)";
+              e.currentTarget.style.borderColor =
+                "#366BA8 #A3CDF9 #A3CDF9 #366BA8";
+              e.currentTarget.style.transform = "translate(1px, 1px)";
+              e.currentTarget.style.boxShadow = "inset 1px 1px 0px #244B7A";
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.filter = "brightness(1.1)";
+              e.currentTarget.style.borderColor =
+                "#A3CDF9 #366BA8 #366BA8 #A3CDF9";
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "1px 1px 0px #244B7A";
+            }}
+          >
+            <span
+              style={{
+                fontSize: 32,
+                lineHeight: 1,
+              }}
+            >
+              📚
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Top Right - Build and Eraser buttons */}
@@ -1848,17 +2005,19 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
           title="Build Menu"
           style={{
             background: isToolWindowVisible ? "#4a1a1a" : "#6b2a2a",
-            border: "2px solid",
-            borderColor: isToolWindowVisible
-              ? "#4a1a1a #ab6a6a #ab6a6a #4a1a1a" // Inverted for active
-              : "#ab6a6a #4a1a1a #4a1a1a #ab6a6a", // Normal
+            borderLeft: "2px solid",
+            borderRight: "2px solid",
+            borderBottom: "2px solid",
+            borderTop: "none",
+            borderLeftColor: isToolWindowVisible ? "#4a1a1a" : "#ab6a6a",
+            borderRightColor: isToolWindowVisible ? "#ab6a6a" : "#4a1a1a",
+            borderBottomColor: isToolWindowVisible ? "#ab6a6a" : "#4a1a1a",
             padding: 0,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 0,
-            borderTop: "none",
             boxShadow: isToolWindowVisible
               ? "inset 1px 1px 0px #2a0a0a"
               : "1px 1px 0px #2a0a0a",
@@ -2003,6 +2162,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
       >
         {/* Map container - Phaser canvas */}
         <div
+          ref={mapContainerRef}
           style={{
             position: "relative",
             overflow: "auto",
@@ -2042,8 +2202,7 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
           employees={employees}
           clients={clients}
           goals={getLevel(levelId)?.goals || { employees: 50, clients: 100 }}
-          onEmployeesClick={() => setIsEmployeePanelVisible(true)}
-          onClientsClick={() => setIsClientPanelVisible(true)}
+          onAdvanceMonth={handleAdvanceMonth}
         />
 
         {/* Floating tool window */}
@@ -2091,25 +2250,16 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
           onHireEmployee={handleHireEmployee}
         />
 
-        {/* Employee Panel */}
-        <EmployeePanel
-          isVisible={isEmployeePanelVisible}
+        {/* Bottom Management Bar - Always visible */}
+        <BottomManagementBar
           employees={employees}
-          economy={economy}
-          maxEmployees={getLevel(levelId)?.goals.employees || 50}
-          onClose={() => setIsEmployeePanelVisible(false)}
-          onHire={handleHireEmployee}
-          onFire={handleFireEmployee}
-        />
-
-        {/* Client Panel */}
-        <ClientPanel
-          isVisible={isClientPanelVisible}
           clients={clients}
           economy={economy}
+          maxEmployees={getLevel(levelId)?.goals.employees || 50}
           maxClients={getLevel(levelId)?.goals.clients || 100}
-          onClose={() => setIsClientPanelVisible(false)}
-          onAcquire={handleAcquireClient}
+          onHireEmployee={handleHireEmployee}
+          onFireEmployee={handleFireEmployee}
+          onAcquireClient={handleAcquireClient}
         />
 
         {/* Load window */}
@@ -2143,6 +2293,31 @@ export default function GameBoard({ levelId = "level_1" }: { levelId?: string })
               promptState.onConfirm(value);
             }
             setPromptState({ ...promptState, isVisible: false });
+          }}
+        />
+
+        {/* Tutorial Modal - Only for Level 1 first-time players */}
+        <TutorialModal
+          isVisible={isTutorialVisible}
+          onComplete={() => {
+            localStorage.setItem("hasSeenTutorial", "true");
+            setIsTutorialVisible(false);
+            // Reset the monthly timer to start fresh after tutorial
+            setEconomy((prev) => ({
+              ...prev,
+              lastMonthTick: Date.now(),
+            }));
+            playDoubleClickSound();
+          }}
+          onSkip={() => {
+            localStorage.setItem("hasSeenTutorial", "true");
+            setIsTutorialVisible(false);
+            // Reset the monthly timer to start fresh after tutorial
+            setEconomy((prev) => ({
+              ...prev,
+              lastMonthTick: Date.now(),
+            }));
+            playClickSound();
           }}
         />
 

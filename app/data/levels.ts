@@ -21,10 +21,10 @@ export const LEVELS: LevelConfig[] = [
     {
         id: "level_2",
         name: "Level 2: The Enterprise",
-        description: "Scale your business to an empire! Reach 50 employees and 100 clients.",
+        description: "Scale your business to an empire! Reach 10 employees and 20 clients.",
         goals: {
-            employees: 50,
-            clients: 100,
+            employees: 10,
+            clients: 20,
         },
     },
 ];
