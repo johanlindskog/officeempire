@@ -217,17 +217,17 @@ body {
     padding: 8px;
   }
 
-  /* Mobile Dashboard adjustments - Ultra compact */
+  /* Mobile Dashboard adjustments - Ultra compact, positioned below top buttons */
   .mobile-responsive-dashboard {
     position: fixed !important;
-    top: 3px !important;
+    top: 42px !important;
     left: 3px !important;
     right: 3px !important;
     width: auto !important;
     max-width: none !important;
     font-size: 9px !important;
     padding: 2px 4px !important;
-    z-index: 1000 !important;
+    z-index: 999 !important;
     line-height: 1.2 !important;
   }
 
@@ -315,10 +315,18 @@ body {
     line-height: 1.2 !important;
   }
 
-  /* Adjust scrollable areas in bottom panels - smaller */
+  /* Adjust scrollable areas in bottom panels - smaller with better styling */
   .bottom-management-bar > div {
     min-height: 120px !important;
     max-height: 160px !important;
+  }
+
+  /* Style the scrollable content areas */
+  .bottom-management-bar > div > div:last-child {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 2px !important;
+    padding: 4px !important;
   }
 
   /* Make text in bottom panels smaller */
@@ -326,6 +334,25 @@ body {
   .bottom-management-bar div {
     font-size: 10px !important;
     line-height: 1.2 !important;
+  }
+
+  /* Better scrollbar styling for bottom panels */
+  .bottom-management-bar ::-webkit-scrollbar {
+    width: 6px !important;
+  }
+
+  .bottom-management-bar ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 3px !important;
+  }
+
+  .bottom-management-bar ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border-radius: 3px !important;
+  }
+
+  .bottom-management-bar ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.7) !important;
   }
 
   /* Main Menu mobile adjustments */
