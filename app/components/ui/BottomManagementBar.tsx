@@ -2,6 +2,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Employee, Client, GameEconomy, EmployeeSkill } from "../game/types";
 import { playClickSound, playDoubleClickSound } from "@/app/utils/sounds";
 
@@ -31,6 +32,10 @@ export default function BottomManagementBar({
   const sortedEmployees = [...employees].sort((a, b) => b.hireDate - a.hireDate);
   const sortedClients = [...clients].sort((a, b) => b.startDate - a.startDate);
   const totalRevenue = clients.reduce((sum, c) => sum + c.monthlyRevenue, 0);
+
+  // Mobile collapse states - default both expanded
+  const [employeeExpanded, setEmployeeExpanded] = useState(true);
+  const [clientExpanded, setClientExpanded] = useState(true);
 
   const handleFire = (employeeId: string) => {
     onFireEmployee(employeeId);
@@ -79,12 +84,37 @@ export default function BottomManagementBar({
           className="rct-titlebar"
           style={{
             borderRadius: 0,
+            position: "relative",
           }}
         >
           <span>👔 Employees ({employees.length}/{maxEmployees})</span>
+
+          {/* Mobile toggle button */}
+          <button
+            onClick={() => setEmployeeExpanded(!employeeExpanded)}
+            className="panel-toggle-mobile"
+            style={{
+              display: "none",
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "rgba(0,0,0,0.3)",
+              border: "1px solid #fff",
+              borderRadius: 2,
+              color: "#fff",
+              padding: "4px 8px",
+              fontSize: 12,
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            {employeeExpanded ? "▲" : "▼"}
+          </button>
         </div>
 
         {/* Employees Content */}
+        {employeeExpanded && (
         <div
           className="rct-panel"
           style={{
@@ -233,6 +263,7 @@ export default function BottomManagementBar({
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* CLIENTS PANEL - Right Half */}
@@ -249,12 +280,37 @@ export default function BottomManagementBar({
           className="rct-titlebar"
           style={{
             borderRadius: 0,
+            position: "relative",
           }}
         >
           <span>🤝 Clients ({clients.length}/{maxClients})</span>
+
+          {/* Mobile toggle button */}
+          <button
+            onClick={() => setClientExpanded(!clientExpanded)}
+            className="panel-toggle-mobile"
+            style={{
+              display: "none",
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "rgba(0,0,0,0.3)",
+              border: "1px solid #fff",
+              borderRadius: 2,
+              color: "#fff",
+              padding: "4px 8px",
+              fontSize: 12,
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            {clientExpanded ? "▲" : "▼"}
+          </button>
         </div>
 
         {/* Clients Content */}
+        {clientExpanded && (
         <div
           className="rct-panel"
           style={{
@@ -425,6 +481,7 @@ export default function BottomManagementBar({
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

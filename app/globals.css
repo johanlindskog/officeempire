@@ -301,6 +301,11 @@ body {
     font-size: 10px !important;
   }
 
+  /* Show panel toggle buttons on mobile */
+  .panel-toggle-mobile {
+    display: block !important;
+  }
+
   .bottom-management-bar .rct-titlebar {
     font-size: 11px !important;
     padding: 3px 5px !important;
