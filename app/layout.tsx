@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Jersey_10, Pixelify_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const jersey10 = Jersey_10({
@@ -35,6 +36,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${jersey10.variable} ${pixelifySans.variable}`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
