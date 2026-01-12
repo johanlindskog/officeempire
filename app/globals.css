@@ -294,16 +294,20 @@ body {
 
   /* Bottom management bar adjustments - more compact */
   .bottom-management-bar {
-    flex-direction: column !important;
     max-height: 30vh !important;
-    overflow-y: auto !important;
     height: auto !important;
     font-size: 10px !important;
   }
 
-  /* Show panel toggle buttons on mobile */
-  .panel-toggle-mobile {
-    display: block !important;
+  /* Show mobile toggle buttons bar */
+  .mobile-panel-toggles {
+    display: flex !important;
+  }
+
+  /* Make panels container side-by-side on mobile */
+  .bottom-panels-container {
+    flex-direction: row !important;
+    overflow-x: auto !important;
   }
 
   .bottom-management-bar .rct-titlebar {

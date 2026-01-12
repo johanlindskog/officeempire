@@ -62,6 +62,7 @@ export default function BottomManagementBar({
         right: 0,
         height: 240,
         display: "flex",
+        flexDirection: "column",
         gap: 0,
         zIndex: 2000,
         userSelect: "none",
@@ -69,6 +70,61 @@ export default function BottomManagementBar({
       }}
       onWheel={(e) => e.stopPropagation()}
     >
+      {/* Mobile toggle buttons bar */}
+      <div
+        className="mobile-panel-toggles"
+        style={{
+          display: "none",
+          flexDirection: "row",
+          gap: 4,
+          padding: "4px",
+          backgroundColor: "var(--rct-frame-mid)",
+          borderBottom: "1px solid var(--rct-frame-dark)",
+        }}
+      >
+        <button
+          onClick={() => setEmployeeExpanded(!employeeExpanded)}
+          style={{
+            flex: 1,
+            background: employeeExpanded ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.1)",
+            border: "1px solid #fff",
+            borderRadius: 2,
+            color: "#fff",
+            padding: "6px 8px",
+            fontSize: 11,
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          👔 Employees {employeeExpanded ? "▲" : "▼"}
+        </button>
+        <button
+          onClick={() => setClientExpanded(!clientExpanded)}
+          style={{
+            flex: 1,
+            background: clientExpanded ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.1)",
+            border: "1px solid #fff",
+            borderRadius: 2,
+            color: "#fff",
+            padding: "6px 8px",
+            fontSize: 11,
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          🤝 Clients {clientExpanded ? "▲" : "▼"}
+        </button>
+      </div>
+
+      {/* Panels container */}
+      <div
+        className="bottom-panels-container"
+        style={{
+          display: "flex",
+          flex: 1,
+          overflow: "hidden",
+        }}
+      >
       {/* EMPLOYEES PANEL - Left Half */}
       <div
         className="rct-frame"
@@ -84,33 +140,9 @@ export default function BottomManagementBar({
           className="rct-titlebar"
           style={{
             borderRadius: 0,
-            position: "relative",
           }}
         >
           <span>👔 Employees ({employees.length}/{maxEmployees})</span>
-
-          {/* Mobile toggle button */}
-          <button
-            onClick={() => setEmployeeExpanded(!employeeExpanded)}
-            className="panel-toggle-mobile"
-            style={{
-              display: "none",
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "rgba(0,0,0,0.3)",
-              border: "1px solid #fff",
-              borderRadius: 2,
-              color: "#fff",
-              padding: "4px 8px",
-              fontSize: 12,
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            {employeeExpanded ? "▲" : "▼"}
-          </button>
         </div>
 
         {/* Employees Content */}
@@ -280,33 +312,9 @@ export default function BottomManagementBar({
           className="rct-titlebar"
           style={{
             borderRadius: 0,
-            position: "relative",
           }}
         >
           <span>🤝 Clients ({clients.length}/{maxClients})</span>
-
-          {/* Mobile toggle button */}
-          <button
-            onClick={() => setClientExpanded(!clientExpanded)}
-            className="panel-toggle-mobile"
-            style={{
-              display: "none",
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "rgba(0,0,0,0.3)",
-              border: "1px solid #fff",
-              borderRadius: 2,
-              color: "#fff",
-              padding: "4px 8px",
-              fontSize: 12,
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            {clientExpanded ? "▲" : "▼"}
-          </button>
         </div>
 
         {/* Clients Content */}
@@ -482,6 +490,7 @@ export default function BottomManagementBar({
           </div>
         </div>
         )}
+      </div>
       </div>
     </div>
   );
