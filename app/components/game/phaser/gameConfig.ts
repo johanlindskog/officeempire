@@ -35,5 +35,11 @@ export function createGameConfig(
       mode: Phaser.Scale.NONE,
       autoCenter: Phaser.Scale.NO_CENTER,
     },
+    input: {
+      activePointers: 3, // Support multi-touch
+      touch: true, // Enable touch events
+      mouse: true, // Enable mouse events
+      smoothFactor: 0, // No smoothing for immediate response
+    },
   };
 }

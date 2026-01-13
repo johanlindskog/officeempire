@@ -290,6 +290,12 @@ body {
   #phaser-game-container {
     overflow: auto !important;
     -webkit-overflow-scrolling: touch;
+    touch-action: none !important; /* Allow Phaser to handle all touch events */
+  }
+
+  /* Ensure canvas receives touch events */
+  #phaser-game-container canvas {
+    touch-action: none !important;
   }
 
   /* Hide desktop bottom management bar on mobile */
