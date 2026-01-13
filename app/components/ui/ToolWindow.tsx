@@ -209,13 +209,19 @@ export default function ToolWindow({
       onWheel={(e) => e.stopPropagation()}
     >
       {/* Title bar */}
-      <div className="rct-titlebar" onMouseDown={handleMouseDown}>
+      <div className="rct-titlebar" onMouseDown={handleMouseDown} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>{mode === "office" ? "Build" : "Buildings"}</span>
         <button
           className="rct-close"
           onClick={() => {
             onClose();
             playDoubleClickSound();
+          }}
+          style={{
+            fontSize: 20,
+            padding: "2px 8px",
+            minWidth: 32,
+            minHeight: 32,
           }}
         >
           ×
@@ -633,6 +639,23 @@ export default function ToolWindow({
             </button>
           </span>
         )}
+
+        {/* Mobile helper text */}
+        <div
+          className="mobile-build-helper"
+          style={{
+            display: "none",
+            padding: "8px 12px",
+            backgroundColor: "rgba(34, 197, 94, 0.2)",
+            borderTop: "1px solid var(--rct-border)",
+            fontSize: 12,
+            color: "var(--rct-text-light)",
+            textAlign: "center",
+            lineHeight: 1.4,
+          }}
+        >
+          💡 Tap an item to select, then tap the map to place. Use the × button to close this menu.
+        </div>
       </div>
 
       {/* Tooltip for hovered item */}
