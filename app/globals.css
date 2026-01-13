@@ -292,72 +292,20 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Bottom management bar adjustments - more compact */
+  /* Hide desktop bottom management bar on mobile */
   .bottom-management-bar {
-    max-height: 30vh !important;
-    height: auto !important;
-    font-size: 10px !important;
+    display: none !important;
   }
 
-  /* Show mobile toggle buttons bar */
-  .mobile-panel-toggles {
+  /* Show mobile bottom buttons */
+  .mobile-bottom-buttons {
     display: flex !important;
   }
 
-  /* Make panels container side-by-side on mobile */
-  .bottom-panels-container {
-    flex-direction: row !important;
-    overflow-x: auto !important;
-  }
-
-  .bottom-management-bar .rct-titlebar {
-    font-size: 11px !important;
-    padding: 3px 5px !important;
-    line-height: 1.2 !important;
-  }
-
-  /* Make employee/client cards even more compact */
-  .bottom-management-bar button {
-    font-size: 10px !important;
-    padding: 4px 8px !important;
-    min-height: 32px !important;
-    line-height: 1.2 !important;
-  }
-
-  /* Adjust scrollable areas in bottom panels - smaller with better styling */
-  .bottom-management-bar > div {
-    min-height: 120px !important;
-    max-height: 160px !important;
-  }
-
-  /* Style the scrollable content areas */
-  .bottom-management-bar > div > div:last-child {
-    background: rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(0, 0, 0, 0.2) !important;
-    border-radius: 2px !important;
-    padding: 4px !important;
-  }
-
-  /* Make text in bottom panels smaller */
-  .bottom-management-bar span,
-  .bottom-management-bar div {
-    font-size: 10px !important;
-    line-height: 1.2 !important;
-  }
-
-  /* Better scrollbar styling for bottom panels */
-  .bottom-management-bar ::-webkit-scrollbar {
-    width: 6px !important;
-  }
-
-  .bottom-management-bar ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2) !important;
-    border-radius: 3px !important;
-  }
-
-  .bottom-management-bar ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.5) !important;
-    border-radius: 3px !important;
+  /* Show mobile modals */
+  .mobile-modal-overlay {
+    display: flex !important;
+    align-items: center;
   }
 
   .bottom-management-bar ::-webkit-scrollbar-thumb:hover {
