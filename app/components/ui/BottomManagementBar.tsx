@@ -519,7 +519,7 @@ export default function BottomManagementBar({
           bottom: 0,
           backgroundColor: "rgba(0,0,0,0.8)",
           zIndex: 3000,
-          padding: "16px",
+          padding: "8px",
           overflowY: "auto",
         }}
         onClick={() => setShowEmployeeModal(false)}
@@ -527,7 +527,8 @@ export default function BottomManagementBar({
         <div
           className="rct-frame"
           style={{
-            maxWidth: "600px",
+            maxWidth: "95%",
+            width: "100%",
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
@@ -618,7 +619,7 @@ export default function BottomManagementBar({
           bottom: 0,
           backgroundColor: "rgba(0,0,0,0.8)",
           zIndex: 3000,
-          padding: "16px",
+          padding: "8px",
           overflowY: "auto",
         }}
         onClick={() => setShowClientModal(false)}
@@ -626,7 +627,8 @@ export default function BottomManagementBar({
         <div
           className="rct-frame"
           style={{
-            maxWidth: "600px",
+            maxWidth: "95%",
+            width: "100%",
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
