@@ -546,16 +546,10 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
         showCancel: false,
         onConfirm: () => {
           setModalState((prev) => ({ ...prev, isVisible: false }));
-          // Reset game state
-          setEmployees([]);
-          setClients([]);
-          setEconomy({
-            cash: 50000,
-            monthlyRevenue: 0,
-            monthlyExpenses: 0,
-            lastMonthTick: Date.now(),
-          });
-          setIsPaused(false);
+          // Return to main menu
+          if (onReturnToMenu) {
+            onReturnToMenu();
+          }
         },
       });
     }
@@ -610,16 +604,10 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
             showCancel: false,
             onConfirm: () => {
               setModalState((prev) => ({ ...prev, isVisible: false }));
-              // Reset game state
-              setEmployees([]);
-              setClients([]);
-              setEconomy({
-                cash: 50000,
-                monthlyRevenue: 0,
-                monthlyExpenses: 0,
-                lastMonthTick: Date.now(),
-              });
-              setIsPaused(false);
+              // Return to main menu
+              if (onReturnToMenu) {
+                onReturnToMenu();
+              }
             },
           });
         }
