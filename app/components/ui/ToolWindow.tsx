@@ -173,6 +173,16 @@ export default function ToolWindow({
     setIsDragging(false);
   }, []);
 
+  // Helper function to check if we're on mobile and should auto-close
+  const autoCloseOnMobile = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const isMobile = window.innerWidth < 768 || "ontouchstart" in window;
+      if (isMobile) {
+        setTimeout(() => onClose(), 300); // Small delay for visual feedback
+      }
+    }
+  }, [onClose]);
+
   if (!isVisible) return null;
 
   const baseWidth = 300;
@@ -304,6 +314,7 @@ export default function ToolWindow({
                           // Select the item
                           onToolSelect(ToolType.Building);
                           onBuildingSelect(item.id);
+                          autoCloseOnMobile(); // Auto-close on mobile
                         }
                         playClickSound();
                       }}
@@ -408,6 +419,7 @@ export default function ToolWindow({
               <button
                 onClick={() => {
                   onToolSelect(ToolType.RoadNetwork);
+                  autoCloseOnMobile();
                   playClickSound();
                 }}
                 className={`rct-button ${selectedTool === ToolType.RoadNetwork ? "active" : ""}`}
@@ -436,6 +448,7 @@ export default function ToolWindow({
               <button
                 onClick={() => {
                   onToolSelect(ToolType.Asphalt);
+                  autoCloseOnMobile();
                   playClickSound();
                 }}
                 className={`rct-button ${selectedTool === ToolType.Asphalt ? "active" : ""}`}
@@ -464,6 +477,7 @@ export default function ToolWindow({
               <button
                 onClick={() => {
                   onToolSelect(ToolType.Tile);
+                  autoCloseOnMobile();
                   playClickSound();
                 }}
                 className={`rct-button ${selectedTool === ToolType.Tile ? "active" : ""}`}
@@ -492,6 +506,7 @@ export default function ToolWindow({
               <button
                 onClick={() => {
                   onToolSelect(ToolType.Snow);
+                  autoCloseOnMobile();
                   playClickSound();
                 }}
                 className={`rct-button ${selectedTool === ToolType.Snow ? "active" : ""}`}
@@ -654,7 +669,7 @@ export default function ToolWindow({
             lineHeight: 1.4,
           }}
         >
-          💡 Tap an item to select, then tap the map to place. Use the × button to close this menu.
+          💡 Tap an item to select. The menu will auto-close so you can place it on the map!
         </div>
       </div>
 
