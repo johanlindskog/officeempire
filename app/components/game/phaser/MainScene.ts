@@ -1065,6 +1065,9 @@ export class MainScene extends Phaser.Scene {
   handlePointerMove(pointer: Phaser.Input.Pointer): void {
     if (!this.isReady) return;
 
+    // Debug: Log pointer events
+    console.log('[Pointer] Move - isDown:', pointer.isDown, 'isPanning:', this.isPanning, 'selectedTool:', this.selectedTool);
+
     // Handle camera panning
     if (this.isPanning && pointer.isDown) {
       const camera = this.cameras.main;
@@ -1188,6 +1191,9 @@ export class MainScene extends Phaser.Scene {
 
   handlePointerDown(pointer: Phaser.Input.Pointer): void {
     if (!this.isReady) return;
+
+    // Debug: Log pointer events
+    console.log('[Pointer] Down - isDown:', pointer.isDown, 'selectedTool:', this.selectedTool, 'hoverTile:', this.hoverTile);
 
     if (pointer.isDown) {
       // Check if we should start panning (no tool selected OR clicking empty space with no active tool)
@@ -2403,10 +2409,14 @@ export class MainScene extends Phaser.Scene {
   private updatePreview(): void {
     this.clearPreview();
 
+    // Debug: Log preview updates
+    console.log('[Preview] updatePreview called - hoverTile:', this.hoverTile, 'selectedTool:', this.selectedTool);
+
     if (!this.hoverTile) return;
     if (this.selectedTool === ToolType.None) return;
 
     const { x, y } = this.hoverTile;
+    console.log('[Preview] Rendering preview at:', x, y);
 
     if (this.selectedTool === ToolType.RoadNetwork) {
       // Get segments to preview - either drag set or just hover segment
