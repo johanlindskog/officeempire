@@ -1192,6 +1192,20 @@ export class MainScene extends Phaser.Scene {
   handlePointerDown(pointer: Phaser.Input.Pointer): void {
     if (!this.isReady) return;
 
+    // Calculate grid position from pointer BEFORE any logic checks
+    // This fixes the chicken-and-egg problem where hoverTile was null on first touch
+    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const gridPos = this.screenToGrid(worldPoint.x, worldPoint.y);
+    const tileX = Math.floor(gridPos.x);
+    const tileY = Math.floor(gridPos.y);
+
+    // Update hoverTile if position is valid
+    if (tileX >= 0 && tileX < GRID_WIDTH && tileY >= 0 && tileY < GRID_HEIGHT) {
+      this.hoverTile = { x: tileX, y: tileY };
+    } else {
+      this.hoverTile = null;
+    }
+
     // Debug: Log pointer events
     console.log('[Pointer] Down - isDown:', pointer.isDown, 'selectedTool:', this.selectedTool, 'hoverTile:', this.hoverTile);
 
