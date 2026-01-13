@@ -1066,7 +1066,7 @@ export class MainScene extends Phaser.Scene {
     if (!this.isReady) return;
 
     // Handle camera panning
-    if (this.isPanning && pointer.leftButtonDown()) {
+    if (this.isPanning && pointer.isDown) {
       const camera = this.cameras.main;
       const dx = (this.panStartX - pointer.x) / camera.zoom;
       const dy = (this.panStartY - pointer.y) / camera.zoom;
@@ -1189,7 +1189,7 @@ export class MainScene extends Phaser.Scene {
   handlePointerDown(pointer: Phaser.Input.Pointer): void {
     if (!this.isReady) return;
 
-    if (pointer.leftButtonDown()) {
+    if (pointer.isDown) {
       // Check if we should start panning (no tool selected OR clicking empty space with no active tool)
       const shouldPan =
         this.selectedTool === ToolType.None ||
