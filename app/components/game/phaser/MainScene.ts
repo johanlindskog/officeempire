@@ -102,6 +102,8 @@ export class MainScene extends Phaser.Scene {
   private grid: GridCell[][] = [];
   private characters: Character[] = [];
   private cars: Car[] = [];
+  private employeeCharacters: Map<string, { character: Character; deskX: number; deskY: number }> = new Map(); // employeeId -> {character, desk}
+  private employeePatrolTargets: Map<string, { x: number; y: number }> = new Map(); // characterId -> patrol target
 
   // Tool state (synced from React)
   private selectedTool: ToolType = ToolType.RoadNetwork;
@@ -524,8 +526,65 @@ export class MainScene extends Phaser.Scene {
 
   private updateCharacters(): void {
     for (let i = 0; i < this.characters.length; i++) {
-      this.characters[i] = this.updateSingleCharacter(this.characters[i]);
+      // Check if this is an employee character
+      const isEmployee = Array.from(this.employeeCharacters.values()).some(
+        (empData) => empData.character.id === this.characters[i].id
+      );
+
+      if (isEmployee) {
+        this.characters[i] = this.updateEmployeeCharacter(this.characters[i]);
+      } else {
+        this.characters[i] = this.updateSingleCharacter(this.characters[i]);
+      }
     }
+  }
+
+  // Update employee character with patrol behavior
+  private updateEmployeeCharacter(char: Character): Character {
+    const target = this.employeePatrolTargets.get(char.id);
+    if (!target) {
+      // No target, just stand still
+      return char;
+    }
+
+    // Calculate distance to target
+    const dx = target.x - char.x;
+    const dy = target.y - char.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // If close to target, pick a new target around the desk
+    if (distance < 0.3) {
+      // Find desk location for this employee
+      for (const [empId, empData] of this.employeeCharacters.entries()) {
+        if (empData.character.id === char.id) {
+          this.setNextPatrolTarget(char.id, empData.deskX, empData.deskY);
+          break;
+        }
+      }
+      return char;
+    }
+
+    // Move toward target
+    const angle = Math.atan2(dy, dx);
+    const speed = char.speed;
+
+    let newDirection = char.direction;
+    // Determine direction based on movement angle
+    if (Math.abs(dx) > Math.abs(dy)) {
+      newDirection = dx > 0 ? Direction.Right : Direction.Left;
+    } else {
+      newDirection = dy > 0 ? Direction.Down : Direction.Up;
+    }
+
+    const nextX = char.x + Math.cos(angle) * speed;
+    const nextY = char.y + Math.sin(angle) * speed;
+
+    return {
+      ...char,
+      x: nextX,
+      y: nextY,
+      direction: newDirection,
+    };
   }
 
   private isWalkable(x: number, y: number): boolean {
@@ -1710,6 +1769,70 @@ export class MainScene extends Phaser.Scene {
       this.playerCar = null;
       this.isPlayerDriving = false;
     }
+  }
+
+  // Spawn an employee character at a specific desk location
+  spawnEmployeeCharacter(employeeId: string, deskX: number, deskY: number): string {
+    // Random character type
+    const characterTypes = [CharacterType.Banana, CharacterType.Apple];
+    const randomCharacterType = characterTypes[Math.floor(Math.random() * characterTypes.length)];
+
+    // Spawn at desk position with small offset
+    const newCharacter: Character = {
+      id: generateId(),
+      x: deskX + 0.5 + (Math.random() - 0.5) * 0.3,
+      y: deskY + 0.5 + (Math.random() - 0.5) * 0.3,
+      direction: allDirections[Math.floor(Math.random() * allDirections.length)],
+      speed: CHARACTER_SPEED * 0.5, // Slower movement for employees
+      characterType: randomCharacterType,
+    };
+
+    this.employeeCharacters.set(employeeId, { character: newCharacter, deskX, deskY });
+    this.characters.push(newCharacter);
+
+    // Set initial patrol target around the desk
+    this.setNextPatrolTarget(newCharacter.id, deskX, deskY);
+
+    return newCharacter.id;
+  }
+
+  // Remove an employee character
+  removeEmployeeCharacter(characterId: string): void {
+    // Find and remove from employeeCharacters map
+    for (const [empId, empData] of this.employeeCharacters.entries()) {
+      if (empData.character.id === characterId) {
+        this.employeeCharacters.delete(empId);
+        break;
+      }
+    }
+
+    // Remove from characters array
+    const index = this.characters.findIndex((c) => c.id === characterId);
+    if (index !== -1) {
+      this.characters.splice(index, 1);
+    }
+
+    // Remove sprite
+    const sprite = this.characterSprites.get(characterId);
+    if (sprite) {
+      sprite.destroy();
+      this.characterSprites.delete(characterId);
+    }
+
+    // Remove patrol target
+    this.employeePatrolTargets.delete(characterId);
+  }
+
+  // Set next patrol target for employee (walk around desk)
+  private setNextPatrolTarget(characterId: string, deskX: number, deskY: number): void {
+    // Pick a random point around the desk (within 2 tiles)
+    const offsetX = (Math.random() - 0.5) * 3;
+    const offsetY = (Math.random() - 0.5) * 3;
+
+    const targetX = Math.max(0, Math.min(GRID_WIDTH - 1, deskX + offsetX));
+    const targetY = Math.max(0, Math.min(GRID_HEIGHT - 1, deskY + offsetY));
+
+    this.employeePatrolTargets.set(characterId, { x: targetX, y: targetY });
   }
 
   setSelectedTool(tool: ToolType): void {

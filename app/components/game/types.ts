@@ -112,6 +112,7 @@ export interface Employee {
   salary: number;
   hireDate: number; // Timestamp
   happiness: number; // 0-100, affects productivity and retention
+  characterId?: string; // Reference to character sprite that represents this employee
 }
 
 export interface Client {

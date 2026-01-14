@@ -25,6 +25,8 @@ export interface PhaserGameHandle {
   clearCars: () => void;
   shakeScreen: (axis?: "x" | "y", intensity?: number, duration?: number) => void;
   zoomAtPoint: (zoom: number, screenX: number, screenY: number) => void;
+  spawnEmployeeCharacter: (employeeId: string, deskX: number, deskY: number) => string;
+  removeEmployeeCharacter: (characterId: string) => void;
 }
 
 interface PhaserGameProps {
@@ -134,6 +136,17 @@ const PhaserGame = forwardRef<PhaserGameHandle, PhaserGameProps>(
           if (sceneRef.current) {
             zoomFromAtPoint.current = zoom; // Track this zoom value to skip re-centering
             sceneRef.current.zoomAtPoint(zoom, screenX, screenY);
+          }
+        },
+        spawnEmployeeCharacter: (employeeId: string, deskX: number, deskY: number) => {
+          if (sceneRef.current) {
+            return sceneRef.current.spawnEmployeeCharacter(employeeId, deskX, deskY);
+          }
+          return "";
+        },
+        removeEmployeeCharacter: (characterId: string) => {
+          if (sceneRef.current) {
+            sceneRef.current.removeEmployeeCharacter(characterId);
           }
         },
       }),

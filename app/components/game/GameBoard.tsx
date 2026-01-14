@@ -231,6 +231,46 @@ const createLevel2StarterOffice = (): GridCell[][] => {
   return grid;
 };
 
+// Create starter office layout for Level 3 (just a founder desk)
+const createLevel3StarterOffice = (): GridCell[][] => {
+  const grid = createEmptyGrid();
+  const squareSize = 26;
+  const start = Math.floor((GRID_WIDTH - squareSize) / 2);
+  const centerX = start + Math.floor(squareSize / 2);
+  const centerY = start + Math.floor(squareSize / 2);
+
+  // Look up furniture definition to get logical properties
+  const furniture = getFurniture("executive-desk");
+  const furnitureType = furniture?.furnitureType;
+  const capacity = furniture?.capacity;
+
+  // Place a single executive desk for the founder in the center
+  grid[centerY][centerX] = {
+    ...grid[centerY][centerX],
+    type: TileType.Building,
+    buildingId: "executive-desk",
+    buildingOrientation: Direction.Down,
+    isOrigin: true,
+    furnitureType,
+    capacity,
+  };
+
+  // Executive desk is 2x1, place the second cell
+  grid[centerY][centerX + 1] = {
+    ...grid[centerY][centerX + 1],
+    type: TileType.Building,
+    buildingId: "executive-desk",
+    buildingOrientation: Direction.Down,
+    isOrigin: false,
+    originX: centerX,
+    originY: centerY,
+    furnitureType,
+    capacity,
+  };
+
+  return grid;
+};
+
 // Discrete zoom levels matching the button zoom levels
 const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 4];
 const SCROLL_THRESHOLD = 100; // Amount of scroll needed to change zoom level
@@ -251,13 +291,15 @@ const findClosestZoomIndex = (zoomValue: number): number => {
 
 export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { levelId?: string; onReturnToMenu?: () => void }) {
   // Grid state (only thing React manages now)
-  // Use starter office for level 1, level 2 starter for level 2, empty grid for other levels
+  // Use starter office for level 1, level 2 starter for level 2, level 3 starter for level 3, empty grid for other levels
   const [grid, setGrid] = useState<GridCell[][]>(() => {
     let initialGrid: GridCell[][];
     if (levelId === "level_1") {
       initialGrid = createLevel1StarterOffice();
     } else if (levelId === "level_2") {
       initialGrid = createLevel2StarterOffice();
+    } else if (levelId === "level_3") {
+      initialGrid = createLevel3StarterOffice();
     } else {
       initialGrid = createEmptyGrid();
     }
@@ -354,14 +396,31 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
     if (!gameInitialized) {
       // Find an available desk for the founder
       const founderDesk = findAvailableDesk(grid);
-      
+
       // Add founder employee (you!) and assign to desk if available
       const founder = generateEmployee(0);
       founder.salary = 10000;
       founder.name = "You (Founder)";
-      
+
       if (founderDesk) {
         founder.assignedDeskId = `${founderDesk.x},${founderDesk.y}`;
+
+        // Spawn founder character at the desk (wait for game to be ready)
+        setTimeout(() => {
+          if (phaserGameRef.current) {
+            const characterId = phaserGameRef.current.spawnEmployeeCharacter(
+              founder.id,
+              founderDesk.x,
+              founderDesk.y
+            );
+            founder.characterId = characterId;
+            // Update employee with characterId
+            setEmployees(prev => prev.map(emp =>
+              emp.id === founder.id ? { ...emp, characterId } : emp
+            ));
+          }
+        }, 100);
+
         // Mark the desk as assigned in the grid
         setGrid((prevGrid) => {
           const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
@@ -372,7 +431,7 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
           return newGrid;
         });
       }
-      
+
       setEmployees([founder]);
 
       // Add 2 starting clients
@@ -599,7 +658,12 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
           const remainingEmployees = prev.filter((emp) => {
             const quitChance = calculateQuitProbability(emp.happiness);
             if (quitChance > 0 && Math.random() < quitChance) {
-              // Employee quits! Clear their desk assignment
+              // Employee quits! Remove their character
+              if (emp.characterId && phaserGameRef.current) {
+                phaserGameRef.current.removeEmployeeCharacter(emp.characterId);
+              }
+
+              // Clear their desk assignment
               if (emp.assignedDeskId) {
                 const [deskX, deskY] = emp.assignedDeskId.split(",").map(Number);
                 setGrid((prevGrid) => {
@@ -1464,7 +1528,17 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
     // Generate new employee and assign to the desk
     const newEmployee = generateEmployee(5000);
     newEmployee.assignedDeskId = `${availableDesk.x},${availableDesk.y}`;
-    
+
+    // Spawn employee character at the desk
+    if (phaserGameRef.current) {
+      const characterId = phaserGameRef.current.spawnEmployeeCharacter(
+        newEmployee.id,
+        availableDesk.x,
+        availableDesk.y
+      );
+      newEmployee.characterId = characterId;
+    }
+
     // Mark the desk as assigned in the grid
     setGrid((prevGrid) => {
       const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
@@ -1474,7 +1548,7 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
       };
       return newGrid;
     });
-    
+
     setEmployees((prev) => [...prev, newEmployee]);
 
     // Deduct hiring cost
@@ -1498,6 +1572,11 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
         newGrid[y][x] = { ...newGrid[y][x], assignedEmployeeId: undefined };
         return newGrid;
       });
+    }
+
+    // Remove employee character from game
+    if (employee.characterId && phaserGameRef.current) {
+      phaserGameRef.current.removeEmployeeCharacter(employee.characterId);
     }
 
     // Deduct severance (1 month salary)
