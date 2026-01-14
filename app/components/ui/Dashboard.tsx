@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { GameEconomy, Employee, Client } from "../game/types";
+import { calculateAverageHappiness, getHappinessTier } from "@/app/utils/happinessSystem";
 
 interface DashboardProps {
   economy: GameEconomy;
@@ -13,6 +14,7 @@ interface DashboardProps {
   goals: {
     employees: number;
     clients: number;
+    happiness?: number;
   };
   onAdvanceMonth?: () => void;
 }
@@ -26,6 +28,10 @@ export default function Dashboard({
 }: DashboardProps) {
   const profitLoss = economy.monthlyRevenue - economy.monthlyExpenses;
   const isProfitable = profitLoss >= 0;
+
+  // Calculate average happiness
+  const avgHappiness = calculateAverageHappiness(employees);
+  const happinessTier = getHappinessTier(avgHappiness);
 
   // State for real-time countdown
   const [timeUntilNextMonth, setTimeUntilNextMonth] = useState(0);
@@ -203,6 +209,28 @@ export default function Dashboard({
             {clients.length}/{goals.clients}
           </span>
         </div>
+
+        {/* Employee Happiness */}
+        {employees.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid rgba(255,255,255,0.3)",
+              paddingTop: 6,
+              marginTop: 2,
+            }}
+          >
+            <span>{happinessTier.emoji} Happiness:</span>
+            <span style={{ fontWeight: "bold", color: happinessTier.color }}>
+              {goals.happiness
+                ? `${avgHappiness}%/${goals.happiness}%`
+                : `${avgHappiness}% (${happinessTier.label})`
+              }
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Progress indicator */}

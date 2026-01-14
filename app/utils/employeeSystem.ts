@@ -96,6 +96,7 @@ export function generateEmployee(baseSalary: number = 5000): Employee {
     assignedDeskId: null,
     salary: baseSalary,
     hireDate: Date.now(),
+    happiness: 75, // Start with decent happiness (75/100)
   };
 }
 

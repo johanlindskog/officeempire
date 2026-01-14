@@ -39,6 +39,11 @@ import {
   countAvailableDesks,
   findAvailableDesk,
 } from "@/app/utils/employeeSystem";
+import {
+  updateAllEmployeeHappiness,
+  calculateQuitProbability,
+  calculateAverageHappiness,
+} from "@/app/utils/happinessSystem";
 import dynamic from "next/dynamic";
 import type { PhaserGameHandle } from "./phaser/PhaserGame";
 import {
@@ -586,6 +591,32 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
           lastMonthTick: now,
         }));
 
+        // Update employee happiness based on current office conditions
+        setEmployees((prev) => updateAllEmployeeHappiness(prev, grid));
+
+        // Handle unhappy employees quitting
+        setEmployees((prev) => {
+          const remainingEmployees = prev.filter((emp) => {
+            const quitChance = calculateQuitProbability(emp.happiness);
+            if (quitChance > 0 && Math.random() < quitChance) {
+              // Employee quits! Clear their desk assignment
+              if (emp.assignedDeskId) {
+                const [deskX, deskY] = emp.assignedDeskId.split(",").map(Number);
+                setGrid((prevGrid) => {
+                  const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
+                  if (newGrid[deskY]?.[deskX]) {
+                    newGrid[deskY][deskX].assignedEmployeeId = undefined;
+                  }
+                  return newGrid;
+                });
+              }
+              return false; // Remove this employee
+            }
+            return true; // Keep this employee
+          });
+          return remainingEmployees;
+        });
+
         // Apply client churn
         setClients((prev) => applyClientChurn(prev, employees.length));
 
@@ -622,12 +653,26 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
     if (isPaused) return;
 
     const currentLevel = getLevel(levelId);
-    if (currentLevel && employees.length >= currentLevel.goals.employees && clients.length >= currentLevel.goals.clients) {
+    if (!currentLevel) return;
+
+    const avgHappiness = calculateAverageHappiness(employees);
+    const employeeGoalMet = employees.length >= currentLevel.goals.employees;
+    const clientGoalMet = clients.length >= currentLevel.goals.clients;
+    const happinessGoalMet = !currentLevel.goals.happiness || avgHappiness >= currentLevel.goals.happiness;
+
+    if (employeeGoalMet && clientGoalMet && happinessGoalMet) {
       setIsPaused(true);
+
+      let statsMessage = `Current Stats:\nEmployees: ${employees.length}\nClients: ${clients.length}`;
+      if (currentLevel.goals.happiness) {
+        statsMessage += `\nHappiness: ${avgHappiness}%`;
+      }
+      statsMessage += `\nCash: $${economy.cash.toLocaleString()}`;
+
       setModalState({
         isVisible: true,
         title: levelId === "level_1" ? "Level Complete! 🌟" : "Victory! 🎉",
-        message: `Congratulations! You've reached the goals for ${currentLevel.name}!\n\nCurrent Stats:\nEmployees: ${employees.length}\nClients: ${clients.length}\nCash: $${economy.cash.toLocaleString()}`,
+        message: `Congratulations! You've reached the goals for ${currentLevel.name}!\n\n${statsMessage}`,
         showCancel: false,
         onConfirm: () => {
           setModalState((prev) => ({ ...prev, isVisible: false }));
@@ -639,7 +684,7 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
         },
       });
     }
-  }, [employees.length, clients.length, levelId, isPaused, onReturnToMenu]);
+  }, [employees.length, clients.length, levelId, isPaused, onReturnToMenu, economy.cash, employees]);
 
 
   // Handle tile click (grid modifications)

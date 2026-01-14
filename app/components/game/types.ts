@@ -111,6 +111,7 @@ export interface Employee {
   assignedDeskId: string | null; // Grid position reference (e.g., "5,10")
   salary: number;
   hireDate: number; // Timestamp
+  happiness: number; // 0-100, affects productivity and retention
 }
 
 export interface Client {

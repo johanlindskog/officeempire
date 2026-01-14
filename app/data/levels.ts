@@ -5,6 +5,7 @@ export interface LevelConfig {
     goals: {
         employees: number;
         clients: number;
+        happiness?: number; // Optional happiness goal (0-100)
     };
 }
 
@@ -25,6 +26,16 @@ export const LEVELS: LevelConfig[] = [
         goals: {
             employees: 10,
             clients: 20,
+        },
+    },
+    {
+        id: "level_3",
+        name: "Level 3: The Growing Firm",
+        description: "Build a thriving workplace! Reach 20 employees, 40 clients, and maintain 65% average employee happiness. Keep your team happy with quality desks and nearby amenities like coffee machines and break areas!",
+        goals: {
+            employees: 20,
+            clients: 40,
+            happiness: 65,
         },
     },
 ];
