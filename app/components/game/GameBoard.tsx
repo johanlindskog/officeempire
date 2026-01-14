@@ -336,9 +336,9 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
   );
   const [isLoadWindowVisible, setIsLoadWindowVisible] = useState(false);
   const [isTutorialVisible, setIsTutorialVisible] = useState(() => {
-    // Show tutorial for level 1 if user hasn't seen it before
-    if (levelId === "level_1") {
-      const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+    // Show tutorial for level 1 and level 3 if user hasn't seen it before
+    if (levelId === "level_1" || levelId === "level_3") {
+      const hasSeenTutorial = localStorage.getItem(`hasSeenTutorial_${levelId}`);
       return !hasSeenTutorial;
     }
     return false;
@@ -2414,8 +2414,9 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
         {/* Tutorial Modal - Only for Level 1 first-time players */}
         <TutorialModal
           isVisible={isTutorialVisible}
+          levelId={levelId}
           onComplete={() => {
-            localStorage.setItem("hasSeenTutorial", "true");
+            localStorage.setItem(`hasSeenTutorial_${levelId}`, "true");
             setIsTutorialVisible(false);
             // Reset the monthly timer to start fresh after tutorial
             setEconomy((prev) => ({
@@ -2425,7 +2426,7 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
             playDoubleClickSound();
           }}
           onSkip={() => {
-            localStorage.setItem("hasSeenTutorial", "true");
+            localStorage.setItem(`hasSeenTutorial_${levelId}`, "true");
             setIsTutorialVisible(false);
             // Reset the monthly timer to start fresh after tutorial
             setEconomy((prev) => ({

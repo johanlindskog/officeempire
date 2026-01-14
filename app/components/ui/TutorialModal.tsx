@@ -15,9 +15,10 @@ interface TutorialModalProps {
   isVisible: boolean;
   onComplete: () => void;
   onSkip: () => void;
+  levelId?: string; // Optional level ID to show level-specific tutorial
 }
 
-const TUTORIAL_STEPS: TutorialStep[] = [
+const LEVEL_1_TUTORIAL: TutorialStep[] = [
   {
     title: "Welcome to Your Consultancy!",
     icon: "👋",
@@ -55,14 +56,56 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   },
 ];
 
+const LEVEL_3_TUTORIAL: TutorialStep[] = [
+  {
+    title: "Welcome to Level 3!",
+    icon: "🌟",
+    description: "Congratulations on making it to Level 3: The Growing Firm! This level introduces a new challenge: Employee Happiness. Let's learn how it works!",
+  },
+  {
+    title: "Employee Happiness System",
+    icon: "😊",
+    description: "Your employees now have a happiness level (0-100%). Check the dashboard - you'll see average happiness displayed with an emoji. Your goal: maintain 65% average happiness!",
+  },
+  {
+    title: "Desk Quality Matters",
+    icon: "💺",
+    description: "Better desks = happier employees!\n\n• Basic Desk: +0 happiness\n• Premium Desk: +10 happiness\n• Executive Desk: +20 happiness\n• Standing Desk: +15 happiness\n\nInvest in quality furniture!",
+  },
+  {
+    title: "Amenities Boost Happiness",
+    icon: "☕",
+    description: "Place amenities near desks for bonus happiness:\n\n• Coffee Machine: +10 (10 tiles range)\n• Break Area: +15 (15 tiles range)\n• Meeting Room: +8 (12 tiles range)\n• Water Cooler: +5 (8 tiles range)\n\nStrategic placement is key!",
+  },
+  {
+    title: "Unhappy Employees Quit!",
+    icon: "⚠️",
+    description: "Watch out! Unhappy employees might quit:\n\n• 60%+ happiness: Safe, won't quit\n• 40-59%: 5% chance to quit per month\n• 20-39%: 15% chance to quit per month\n• <20%: 30% chance to quit per month\n\nKeep them happy!",
+  },
+  {
+    title: "Office Layout Strategy",
+    icon: "🎯",
+    description: "Plan your office wisely! Group desks around coffee machines and break areas. Use premium desks for important employees. Remember: amenity bonuses only apply once per type!",
+  },
+  {
+    title: "Level 3 Goals",
+    icon: "🏆",
+    description: "To complete Level 3:\n\n✓ Hire 20 employees\n✓ Acquire 40 clients\n✓ Maintain 65% average happiness\n\nBalance growth with employee satisfaction. Good luck!",
+  },
+];
+
 export default function TutorialModal({
   isVisible,
   onComplete,
   onSkip,
+  levelId = "level_1",
 }: TutorialModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   if (!isVisible) return null;
+
+  // Select tutorial steps based on level
+  const TUTORIAL_STEPS = levelId === "level_3" ? LEVEL_3_TUTORIAL : LEVEL_1_TUTORIAL;
 
   const step = TUTORIAL_STEPS[currentStep];
   const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
