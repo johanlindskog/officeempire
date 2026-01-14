@@ -401,6 +401,7 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
       const founder = generateEmployee(0);
       founder.salary = 10000;
       founder.name = "You (Founder)";
+      founder.isFounder = true;
 
       if (founderDesk) {
         founder.assignedDeskId = `${founderDesk.x},${founderDesk.y}`;
@@ -411,7 +412,8 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
             const characterId = phaserGameRef.current.spawnEmployeeCharacter(
               founder.id,
               founderDesk.x,
-              founderDesk.y
+              founderDesk.y,
+              true // isFounder = true
             );
             founder.characterId = characterId;
             // Update employee with characterId

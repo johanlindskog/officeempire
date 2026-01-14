@@ -95,6 +95,7 @@ export class MainScene extends Phaser.Scene {
   private glowSprites: Map<string, Phaser.GameObjects.GameObject> = new Map();
   private carSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private characterSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
+  private crownSprites: Map<string, Phaser.GameObjects.Text> = new Map(); // characterId -> crown emoji
   private previewSprites: Phaser.GameObjects.Image[] = [];
   private lotPreviewSprites: Phaser.GameObjects.Image[] = [];
 
@@ -102,7 +103,7 @@ export class MainScene extends Phaser.Scene {
   private grid: GridCell[][] = [];
   private characters: Character[] = [];
   private cars: Car[] = [];
-  private employeeCharacters: Map<string, { character: Character; deskX: number; deskY: number }> = new Map(); // employeeId -> {character, desk}
+  private employeeCharacters: Map<string, { character: Character; deskX: number; deskY: number; isFounder: boolean }> = new Map(); // employeeId -> {character, desk, isFounder}
   private employeePatrolTargets: Map<string, { x: number; y: number }> = new Map(); // characterId -> patrol target
 
   // Tool state (synced from React)
@@ -1772,7 +1773,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   // Spawn an employee character at a specific desk location
-  spawnEmployeeCharacter(employeeId: string, deskX: number, deskY: number): string {
+  spawnEmployeeCharacter(employeeId: string, deskX: number, deskY: number, isFounder: boolean = false): string {
     // Random character type
     const characterTypes = [CharacterType.Banana, CharacterType.Apple];
     const randomCharacterType = characterTypes[Math.floor(Math.random() * characterTypes.length)];
@@ -1787,11 +1788,23 @@ export class MainScene extends Phaser.Scene {
       characterType: randomCharacterType,
     };
 
-    this.employeeCharacters.set(employeeId, { character: newCharacter, deskX, deskY });
+    this.employeeCharacters.set(employeeId, { character: newCharacter, deskX, deskY, isFounder });
     this.characters.push(newCharacter);
 
     // Set initial patrol target around the desk
     this.setNextPatrolTarget(newCharacter.id, deskX, deskY);
+
+    // If founder, create crown marker
+    if (isFounder) {
+      const screenPos = this.gridToScreen(newCharacter.x, newCharacter.y);
+      const crown = this.add.text(screenPos.x, screenPos.y - 30, '👑', {
+        fontSize: '20px',
+        fontFamily: 'Arial',
+      });
+      crown.setOrigin(0.5, 0.5);
+      crown.setDepth(this.depthFromSortPoint(screenPos.x, screenPos.y - 30, 0.3));
+      this.crownSprites.set(newCharacter.id, crown);
+    }
 
     return newCharacter.id;
   }
@@ -1817,6 +1830,13 @@ export class MainScene extends Phaser.Scene {
     if (sprite) {
       sprite.destroy();
       this.characterSprites.delete(characterId);
+    }
+
+    // Remove crown if exists
+    const crown = this.crownSprites.get(characterId);
+    if (crown) {
+      crown.destroy();
+      this.crownSprites.delete(characterId);
     }
 
     // Remove patrol target
@@ -2489,6 +2509,12 @@ export class MainScene extends Phaser.Scene {
       if (!currentCharIds.has(id)) {
         sprite.destroy();
         this.characterSprites.delete(id);
+        // Also remove crown if exists
+        const crown = this.crownSprites.get(id);
+        if (crown) {
+          crown.destroy();
+          this.crownSprites.delete(id);
+        }
       }
     });
 
@@ -2520,6 +2546,13 @@ export class MainScene extends Phaser.Scene {
       }
 
       sprite.setDepth(this.depthFromSortPoint(screenPos.x, centerY, 0.2));
+
+      // Update crown position if this character has one
+      const crown = this.crownSprites.get(char.id);
+      if (crown) {
+        crown.setPosition(screenPos.x, centerY - 30);
+        crown.setDepth(this.depthFromSortPoint(screenPos.x, centerY - 30, 0.3));
+      }
     }
   }
 

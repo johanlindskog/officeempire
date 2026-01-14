@@ -25,7 +25,7 @@ export interface PhaserGameHandle {
   clearCars: () => void;
   shakeScreen: (axis?: "x" | "y", intensity?: number, duration?: number) => void;
   zoomAtPoint: (zoom: number, screenX: number, screenY: number) => void;
-  spawnEmployeeCharacter: (employeeId: string, deskX: number, deskY: number) => string;
+  spawnEmployeeCharacter: (employeeId: string, deskX: number, deskY: number, isFounder?: boolean) => string;
   removeEmployeeCharacter: (characterId: string) => void;
 }
 
@@ -138,9 +138,9 @@ const PhaserGame = forwardRef<PhaserGameHandle, PhaserGameProps>(
             sceneRef.current.zoomAtPoint(zoom, screenX, screenY);
           }
         },
-        spawnEmployeeCharacter: (employeeId: string, deskX: number, deskY: number) => {
+        spawnEmployeeCharacter: (employeeId: string, deskX: number, deskY: number, isFounder?: boolean) => {
           if (sceneRef.current) {
-            return sceneRef.current.spawnEmployeeCharacter(employeeId, deskX, deskY);
+            return sceneRef.current.spawnEmployeeCharacter(employeeId, deskX, deskY, isFounder);
           }
           return "";
         },
