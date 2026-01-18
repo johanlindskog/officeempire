@@ -450,13 +450,23 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Detect mobile device
+  // Detect mobile device (phones and tablets, not laptops)
   useEffect(() => {
     const checkMobile = () => {
+      // Check for touch device
       const isTouchDevice =
         "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+      // Check if screen is small (typical mobile/tablet size)
       const isSmallScreen = window.innerWidth < 768;
-      setIsMobile(isTouchDevice || isSmallScreen);
+
+      // Check user agent for mobile/tablet indicators
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+
+      // Only consider it mobile if it has touch AND (small screen OR mobile user agent)
+      // This prevents laptops with touchscreens from being flagged as mobile
+      setIsMobile(isTouchDevice && (isSmallScreen || isMobileUA));
     };
 
     checkMobile();

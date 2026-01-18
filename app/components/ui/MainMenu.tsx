@@ -22,23 +22,25 @@ export default function MainMenu({ onStartGame }: MainMenuProps) {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
+                padding: "20px",
+                overflow: "auto",
             }}
         >
             {/* Title Card */}
             <div
                 className="rct-panel"
                 style={{
-                    padding: "20px 40px",
-                    marginBottom: 40,
-                    boxShadow: "8px 8px 0px rgba(0,0,0,0.5)",
+                    padding: "12px 24px",
+                    marginBottom: 20,
+                    boxShadow: "6px 6px 0px rgba(0,0,0,0.5)",
                     textAlign: "center",
                 }}
             >
                 <h1
                     style={{
-                        fontSize: 64,
+                        fontSize: "clamp(32px, 8vw, 48px)",
                         margin: 0,
-                        textShadow: "4px 4px 0px #4a1a1a",
+                        textShadow: "3px 3px 0px #4a1a1a",
                         color: "#fff",
                         fontFamily: "var(--font-jersey), sans-serif",
                     }}
@@ -47,10 +49,10 @@ export default function MainMenu({ onStartGame }: MainMenuProps) {
                 </h1>
                 <div
                     style={{
-                        fontSize: 24,
+                        fontSize: "clamp(14px, 3vw, 18px)",
                         color: "#4a1a1a",
                         fontWeight: "bold",
-                        marginTop: 8,
+                        marginTop: 4,
                     }}
                 >
                     OFFICE SIMULATOR
@@ -63,13 +65,14 @@ export default function MainMenu({ onStartGame }: MainMenuProps) {
                 style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: 16,
-                    padding: 24,
-                    boxShadow: "8px 8px 0px rgba(0,0,0,0.5)",
-                    minWidth: 400,
+                    gap: 10,
+                    padding: "16px",
+                    boxShadow: "6px 6px 0px rgba(0,0,0,0.5)",
+                    width: "100%",
+                    maxWidth: "500px",
                 }}
             >
-                <div style={{ textAlign: "center", marginBottom: 8, fontSize: 18, fontWeight: "bold" }}>
+                <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: "bold" }}>
                     Select Level
                 </div>
 
@@ -79,29 +82,29 @@ export default function MainMenu({ onStartGame }: MainMenuProps) {
                         className="rct-button"
                         onClick={() => onStartGame(level.id)}
                         style={{
-                            fontSize: 20,
-                            padding: "12px 24px",
+                            fontSize: 16,
+                            padding: "10px 16px",
                             textAlign: "center",
                             display: "flex",
                             flexDirection: "column",
-                            gap: 4,
+                            gap: 2,
                         }}
                     >
                         <span>{level.name}</span>
-                        <span style={{ fontSize: 14, opacity: 0.8, fontWeight: "normal" }}>
+                        <span style={{ fontSize: 12, opacity: 0.8, fontWeight: "normal" }}>
                             {level.description}
                         </span>
                     </button>
                 ))}
 
-                <div style={{ height: 16 }} />
+                <div style={{ height: 8 }} />
 
                 <button
                     className="rct-button"
                     onClick={() => setShowAbout(true)}
                     style={{
-                        fontSize: 24,
-                        padding: "12px 24px",
+                        fontSize: 18,
+                        padding: "10px 16px",
                         textAlign: "center",
                     }}
                 >
@@ -112,8 +115,8 @@ export default function MainMenu({ onStartGame }: MainMenuProps) {
                     className="rct-button"
                     onClick={() => window.open("https://officeempire.lovable.app/", "_blank")}
                     style={{
-                        fontSize: 24,
-                        padding: "12px 24px",
+                        fontSize: 18,
+                        padding: "10px 16px",
                         textAlign: "center",
                     }}
                 >
