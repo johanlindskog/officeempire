@@ -389,11 +389,12 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
     monthlyExpenses: 0,
     lastMonthTick: Date.now(),
   });
-  const [gameInitialized, setGameInitialized] = useState(false);
+  const gameInitializedRef = useRef(false);
 
   // Initialize game with starting employees and clients
   useEffect(() => {
-    if (!gameInitialized) {
+    if (!gameInitializedRef.current) {
+      gameInitializedRef.current = true;
       // Find an available desk for the founder
       const founderDesk = findAvailableDesk(grid);
 
@@ -406,23 +407,6 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
       if (founderDesk) {
         founder.assignedDeskId = `${founderDesk.x},${founderDesk.y}`;
 
-        // Spawn founder character at the desk (wait for game to be ready)
-        setTimeout(() => {
-          if (phaserGameRef.current) {
-            const characterId = phaserGameRef.current.spawnEmployeeCharacter(
-              founder.id,
-              founderDesk.x,
-              founderDesk.y,
-              true // isFounder = true
-            );
-            founder.characterId = characterId;
-            // Update employee with characterId
-            setEmployees(prev => prev.map(emp =>
-              emp.id === founder.id ? { ...emp, characterId } : emp
-            ));
-          }
-        }, 100);
-
         // Mark the desk as assigned in the grid
         setGrid((prevGrid) => {
           const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
@@ -434,15 +418,37 @@ export default function GameBoard({ levelId = "level_1", onReturnToMenu }: { lev
         });
       }
 
+      // Set the founder employee first
       setEmployees([founder]);
+
+      // Spawn founder character at the desk (wait for game to be ready)
+      // We need to wait for Phaser to fully initialize and retry if not ready
+      const spawnFounder = () => {
+        if (founderDesk && phaserGameRef.current) {
+          const characterId = phaserGameRef.current.spawnEmployeeCharacter(
+            founder.id,
+            founderDesk.x,
+            founderDesk.y,
+            true // isFounder = true
+          );
+          // Update employee with characterId
+          setEmployees(prev =>
+            prev.map(emp =>
+              emp.id === founder.id ? { ...emp, characterId } : emp
+            )
+          );
+        } else {
+          // Phaser not ready yet, retry
+          setTimeout(spawnFounder, 500);
+        }
+      };
+      setTimeout(spawnFounder, 500);
 
       // Add 2 starting clients
       setClients([generateClient(), generateClient()]);
-
-      setGameInitialized(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameInitialized]);
+  }, []);
 
   // Detect mobile device
   useEffect(() => {
